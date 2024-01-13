@@ -1,0 +1,117 @@
+/* Tokens not created with material theme builder and collected from various other sources like documentation and Figma Material 3 Design Kit.
+These tokens might not follow naming guidelines */
+:root {
+  --md-sys-elevation-level-0-shadow: none;
+
+  /* Elevation */
+  /* light */
+  /* Use --md-sys-color-shadow for shadow color maybe? */
+  --md-sys-elevation-light-level-1-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15),
+    0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+  --md-sys-elevation-light-level-2-shadow: 0px 2px 6px 2px rgba(0, 0, 0, 0.15),
+    0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+  --md-sys-elevation-light-level-3-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.3),
+    0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+  --md-sys-elevation-light-level-4-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.3),
+    0px 6px 10px 4px rgba(0, 0, 0, 0.15);
+  --md-sys-elevation-light-level-5-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.3),
+    0px 8px 12px 6px rgba(0, 0, 0, 0.15);
+  /* dark */
+  --md-sys-elevation-dark-level-1-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
+    0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+  --md-sys-elevation-dark-level-2-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
+    0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+  --md-sys-elevation-dark-level-3-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.3),
+    0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+  --md-sys-elevation-dark-level-4-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.3),
+    0px 6px 10px 4px rgba(0, 0, 0, 0.15);
+  --md-sys-elevation-dark-level-5-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.3),
+    0px 8px 12px 6px rgba(0, 0, 0, 0.15);
+
+  /* https://m3.material.io/styles/elevation/tokens */
+  --md-sys-elevation-level-0-z-index: 0;
+  --md-sys-elevation-level-1-z-index: 1;
+  --md-sys-elevation-level-2-z-index: 3;
+  --md-sys-elevation-level-3-z-index: 6;
+  --md-sys-elevation-level-4-z-index: 8;
+  --md-sys-elevation-level-5-z-index: 12;
+
+  /* States */
+  /* https://m3.material.io/foundations/interaction/states/state-layers#bf9b84b2-690c-44b2-8429-8c42dc012d43 (there is a list for the states) */
+  --md-sys-state-hover-state-layer-opacity: 8%;
+  --md-sys-state-focus-state-layer-opacity: 12%;
+  --md-sys-state-pressed-state-layer-opacity: 12%;
+  --md-sys-state-drag-state-layer-opacity: 16%;
+
+  /* Shape */
+  --md-sys-shape-corner-none: 0;
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-extra-small-top: 4px 4px 0 0;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-large-end: 0 16px 16px 0;
+  --md-sys-shape-corner-large-top: 16px 16px 0 0;
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-extra-large-top: 28px 28px 0 0;
+  --md-sys-shape-corner-full: 100%;
+
+  /* Motion Duration */
+  /* https://m3.material.io/styles/motion/easing-and-duration/tokens-specs */
+  /* Short */
+  --md-sys-motion-duration-short-1: 50ms;
+  --md-sys-motion-duration-short-2: 100ms;
+  --md-sys-motion-duration-short-3: 150ms;
+  --md-sys-motion-duration-short-4: 200ms;
+  /* Medium */
+  --md-sys-motion-duration-medium-1: 250ms;
+  --md-sys-motion-duration-medium-2: 300ms;
+  --md-sys-motion-duration-medium-3: 350ms;
+  --md-sys-motion-duration-medium-4: 400ms;
+  /* Long */
+  --md-sys-motion-duration-long-1: 450ms;
+  --md-sys-motion-duration-long-2: 500ms;
+  --md-sys-motion-duration-long-3: 550ms;
+  --md-sys-motion-duration-long-4: 600ms;
+  /* Extra long */
+  --md-sys-motion-duration-extra-long-1: 700ms;
+  --md-sys-motion-duration-extra-long-2: 800ms;
+  --md-sys-motion-duration-extra-long-3: 900ms;
+  --md-sys-motion-duration-extra-long-4: 1s;
+
+  /* Motion Easing */
+  /* Standard */
+  --md-sys-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --md-sys-motion-easing-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --md-sys-motion-easing-decelerate: cubic-bezier(0, 0, 0, 1);
+  /* Emphasized */
+  --md-sys-motion-easing-linear: linear;
+  /* TODO fallback to standard */
+  --md-sys-motion-easing-emphasized: linear(
+    0,
+    0.002,
+    0.01 3.6%,
+    0.034,
+    0.074 9.1%,
+    0.128 11.4%,
+    0.194 13.4%,
+    0.271 15%,
+    0.344 16.1%,
+    0.544,
+    0.66 20.6%,
+    0.717 22.4%,
+    0.765 24.6%,
+    0.808 27.3%,
+    0.845 30.4%,
+    0.883 35.1%,
+    0.916 40.6%,
+    0.942 47.2%,
+    0.963 55%,
+    0.979 64%,
+    0.991 74.4%,
+    0.998 86.4%,
+    1
+  );
+  --md-sys-motion-easing-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --md-sys-motion-easing-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+}

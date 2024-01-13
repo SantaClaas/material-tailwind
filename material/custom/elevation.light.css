@@ -1,0 +1,17 @@
+:root {
+  --md-sys-elevation-level-1-shadow: var(
+    --md-sys-elevation-light-level-1-shadow
+  );
+  --md-sys-elevation-level-2-shadow: var(
+    --md-sys-elevation-light-level-2-shadow
+  );
+  --md-sys-elevation-level-3-shadow: var(
+    --md-sys-elevation-light-level-3-shadow
+  );
+  --md-sys-elevation-level-4-shadow: var(
+    --md-sys-elevation-light-level-4-shadow
+  );
+  --md-sys-elevation-level-5-shadow: var(
+    --md-sys-elevation-light-level-5-shadow
+  );
+}
