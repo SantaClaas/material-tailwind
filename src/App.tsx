@@ -59,6 +59,9 @@ function App() {
 
   return (
     <>
+      <h1 class="text-display-lg text-dark-on-error-container bg-dark-error-container rounded-xl">
+        Error
+      </h1>
       <label for="color">Select color</label>
       <input
         type="color"
@@ -75,7 +78,7 @@ function App() {
         Copy
       </button>
 
-      <h1 class="text-neutralVariant-35">Test Phrase</h1>
+      <h1 class="text-primary-70">Test Phrase</h1>
       {/* <pre>{configurationJson()}</pre> */}
     </>
   );
