@@ -1,6 +1,6 @@
 # Material Theme to Tailwind CSS
 
-Use Materia Design Theme but still take advantage of the great Tailwind CSS utilities and ecosystem
+Swap Tailwind CSS design system for Material design system but still take advantage of Tailwind CSS utilities and ecosystem.
 
 # Roadmap
 

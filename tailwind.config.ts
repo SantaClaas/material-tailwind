@@ -32,7 +32,7 @@ function camelToKebabCase(value: string): string {
 }
 
 function generatePaletteSteps(
-  palette: TonalPalette
+  palette: TonalPalette,
 ): ResolvableTo<RecursiveKeyValuePair> {
   // Supported color steps
   // Material Design goes from 0 to 100 for lightness (like percent)
@@ -56,7 +56,7 @@ function generatePaletteSteps(
 }
 
 function createPalletes(
-  materialPalettes: Theme["palettes"]
+  materialPalettes: Theme["palettes"],
 ): ResolvableTo<RecursiveKeyValuePair> {
   const palettes = {};
   for (let key in materialPalettes) {
@@ -71,7 +71,7 @@ function createPalletes(
 }
 
 function createColors(
-  schemes: Theme["schemes"]
+  schemes: Theme["schemes"],
 ): ResolvableTo<RecursiveKeyValuePair> {
   const colors = {};
 
@@ -171,7 +171,7 @@ type PluginConfiguration = {
 function createPlugin(sourceColor: string) {
   const tailwindTheme: Partial<CustomThemeConfig> = createTheme(sourceColor);
 
-  const creator: PluginCreator = function (api: PluginAPI): void {};
+  const creator: PluginCreator = function (_api: PluginAPI): void {};
   return plugin(creator, { theme: tailwindTheme });
 }
 
