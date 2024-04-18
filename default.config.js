@@ -1,8 +1,9 @@
-import type { CustomThemeConfig } from "tailwindcss/types/config";
+/** @typedef {import("tailwindcss/types/config").CustomThemeConfig} CustomThemeConfig */
 
-const defaultConfiguration: Partial<
-  CustomThemeConfig & { extend: Partial<CustomThemeConfig> }
-> = {
+/**
+ * @type {Partial<CustomThemeConfig & { extend: Partial<CustomThemeConfig> }>}
+ */
+const defaultConfiguration = {
   borderRadius: {
     none: "0px",
     xs: "0.25rem",
@@ -67,12 +68,6 @@ const defaultConfiguration: Partial<
       '"Courier New"',
       "monospace",
     ],
-    //TODO replace these placeholder fonts
-    display: ["Roboto", "sans-serif"],
-    headline: ["Roboto", "sans-serif"],
-    body: ["Roboto", "sans-serif"],
-    label: ["Roboto", "sans-serif"],
-    title: ["Roboto", "sans-serif"],
   }),
 
   fontSize: {
