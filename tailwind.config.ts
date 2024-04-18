@@ -23,7 +23,7 @@ import defaultConfiguration from "./default.config";
 
 /**
  * Convert camelCase to kebab-case
- * e.g. "neutralVarialt" -> "neutral-variant"
+ * e.g. "neutralVariant" -> "neutral-variant"
  * @param value
  * @returns
  */
