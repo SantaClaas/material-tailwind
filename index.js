@@ -1,15 +1,19 @@
 import {
   argbFromHex,
   hexFromArgb,
-  themeFromSourceColor,
   TonalPalette,
-} from "@material/material-color-utilities/index.js";
+  DynamicScheme,
+  SchemeTonalSpot,
+  Hct,
+  MaterialDynamicColors,
+  DynamicColor,
+  // Using the repository as dependency as it includes color utilities not yet released
+} from "@material/material-color-utilities";
 import plugin from "tailwindcss/plugin.js";
 
 import defaultConfiguration from "./default.config.js";
 
 /**
- * @typedef {import("@material/material-color-utilities").Theme} Theme
  * @typedef {import("tailwindcss").Config} Config
  * @typedef {import("tailwindcss/types/config").CustomThemeConfig} CustomThemeConfig
  * @typedef {import("tailwindcss/types/config").OptionalConfig} OptionalConfig
@@ -63,20 +67,19 @@ function generatePaletteSteps(palette) {
   return result;
 }
 
+/** @typedef {[name: string, palette: TonalPalette][]} PaletteArray */
 /**
  *
- * @param {{ [key: string]: TonalPalette }} materialPalettes
+ * @param {PaletteArray} materialPalettes
  * @returns {RecursiveKeyValuePair}
  */
 function createPalletes(materialPalettes) {
   /** @type {Record<string, RecursiveKeyValuePair>} */
   const palettes = {};
-  for (let key in materialPalettes) {
-    const palette = materialPalettes[key];
-
+  for (let [name, palette] of materialPalettes) {
     const paletteSteps = generatePaletteSteps(palette);
-    key = camelToKebabCase(key);
-    palettes[key] = paletteSteps;
+    name = camelToKebabCase(name);
+    palettes[name] = paletteSteps;
   }
 
   return palettes;
@@ -84,28 +87,28 @@ function createPalletes(materialPalettes) {
 
 /**
  *
- * @param {{[key: string]: Scheme}} schemes
+ * @param {{[key: string]: DynamicScheme}} schemes
  * @returns {RecursiveKeyValuePair}
  */
 function createColors(schemes) {
   /** @type {RecursiveKeyValuePair} */
   const colors = {};
 
-  for (let schemeKey in schemes) {
-    const schemeValue = schemes[schemeKey];
-    /** @type {{[key: string]: number}} */
-    const schemeJson = schemeValue.toJSON();
+  for (let [name, scheme] of Object.entries(schemes)) {
     /** @type {Record<string,string>} */
     const schemeColors = {};
-    for (let colorKey in schemeJson) {
-      const colorValue = schemeJson[colorKey];
 
-      colorKey = camelToKebabCase(colorKey);
-      schemeColors[colorKey] = hexFromArgb(colorValue);
+    for (const [name, color] of Object.entries(MaterialDynamicColors)) {
+      // Only properties with color values
+      if (!(color instanceof DynamicColor)) continue;
+
+      const value = scheme.getArgb(color);
+      const key = camelToKebabCase(name);
+      schemeColors[key] = hexFromArgb(value);
     }
 
-    schemeKey = camelToKebabCase(schemeKey);
-    colors[schemeKey] = schemeColors;
+    name = camelToKebabCase(name);
+    colors[name] = schemeColors;
   }
 
   return colors;
@@ -117,11 +120,22 @@ function createColors(schemes) {
  * @returns {Partial<CustomThemeConfig>}
  */
 function createTheme(sourceColor) {
-  const materialTheme = themeFromSourceColor(argbFromHex(sourceColor));
+  // Use new DynamicSchmeme as in
+  // https://github.com/material-foundation/material-color-utilities/blob/main/make_schemes.md
+  const color = Hct.fromInt(argbFromHex(sourceColor));
+  const light = new SchemeTonalSpot(color, false, 0);
+  const dark = new SchemeTonalSpot(color, true, 0);
 
-  const colors = createColors(materialTheme.schemes);
+  const colors = createColors({ light, dark });
 
-  const palletes = createPalletes(materialTheme.palettes);
+  // The palletes are the same for light and dark
+  /** @type {PaletteArray} */
+  const sourcePalletes = Object.entries(light)
+    .filter(([, value]) => value instanceof TonalPalette)
+    // Remove "palette" postfix
+    .map(([key, value]) => [key.replace("Palette", ""), value]);
+
+  const palletes = createPalletes(sourcePalletes);
   //TODO find out what tone high and medium contrast have
   // console.debug("materialTheme", materialTheme);
   // let source = Hct.fromInt(0x673ab7);
@@ -147,7 +161,7 @@ function createTheme(sourceColor) {
   const tailwindTheme = {
     ...defaultConfiguration,
     colors: {
-      source: hexFromArgb(materialTheme.source),
+      source: sourceColor,
       ...colors,
       ...palletes,
     },
@@ -162,7 +176,7 @@ function createTheme(sourceColor) {
  */
 
 /**
- *
+ * Creates the plugin based on the configuration
  * @param {Configuration} configuration
  * @returns
  */

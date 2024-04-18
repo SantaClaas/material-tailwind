@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@material/material-color-utilities':
-        specifier: ^0.2.7
-        version: 0.2.7
+        specifier: ./material-color-utilities/typescript
+        version: link:material-color-utilities/typescript
     devDependencies:
       tailwindcss:
         specifier: ^3.4.1
@@ -43,9 +43,6 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
-
-  '@material/material-color-utilities@0.2.7':
-    resolution: {integrity: sha512-0FCeqG6WvK4/Cc06F/xXMd/pv4FeisI0c1tUpBbfhA2n9Y8eZEv4Karjbmf2ZqQCPUWMrGp8A571tCjizxoTiQ==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -469,8 +466,6 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
-
-  '@material/material-color-utilities@0.2.7': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:

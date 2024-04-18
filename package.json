@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "@material/material-color-utilities": "^0.2.7"
+    "@material/material-color-utilities": "./material-color-utilities/typescript"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.1"

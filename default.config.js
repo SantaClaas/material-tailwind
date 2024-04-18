@@ -267,6 +267,13 @@ const defaultConfiguration = {
       "emphasized-accelerate": "cubic-bezier(0.3, 0, 0.8, 0.15)",
       "emphasized-decelerate": "cubic-bezier(0.05, 0.7, 0.1, 1)",
     },
+    spacing: {
+      compact: "1rem",
+      medium: "1.5rem",
+      expanded: "1.5rem",
+      large: "1.5rem",
+      extraLarge: "1.5rem",
+    },
   },
 };
 
