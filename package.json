@@ -1,6 +1,17 @@
 {
   "name": "@claas.dev/material-tailwind",
+  "description": "Use the Material design system with Tailwind CSS.",
+  "homepage": "https://github.com/santaclaas/material-tailwind",
   "license": "Apache-2.0",
+  "author": {
+    "name": "claas",
+    "email": "material-tailwind@claas.dev",
+    "url": "https://claas.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "santaclaas/material-tailwind"
+  },
   "private": false,
   "version": "0.0.0",
   "type": "module",
@@ -8,5 +19,8 @@
   "dependencies": {
     "@material/material-color-utilities": "./@material/material-color-utilities",
     "tailwindcss": "^3.4.1"
-  }
+  },
+  "bundledDependencies": [
+    "@material/material-color-utilities"
+  ]
 }
