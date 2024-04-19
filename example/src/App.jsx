@@ -9,7 +9,7 @@ export default function App() {
           Material color roles
         </h1>
         <p class="text-title-md mb-4">
-          Powered by{" "}
+          <span>Powered by </span>
           <a
             class="text-light-primary dark:text-dark-primary"
             href="https://github.com/santaclaas/material-tailwind"
