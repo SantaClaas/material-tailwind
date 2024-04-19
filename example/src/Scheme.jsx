@@ -269,26 +269,26 @@ export default function Scheme() {
             class="bg-light-surface-container-highest dark:bg-dark-surface-container-highest"
           />
         </div>
-        <div class="col-span-3 grid grid-flow-col">
+        <div class="col-span-3 grid grid-flow-col text-light-surface dark:text-dark-surface">
           <Swatch
             role="On Surface"
             token="n-10"
-            class="bg-light-on-surface dark:bg-dark-on-surface text-light-surface"
+            class="bg-light-on-surface dark:bg-dark-on-surface"
           />
           <Swatch
             role="On Surface Var."
             token="NV-30"
-            class="bg-light-on-surface-variant dark:bg-dark-on-surface-variant text-light-surface"
+            class="bg-light-on-surface-variant dark:bg-dark-on-surface-variant"
           />
           <Swatch
             role="Outline"
             token="NV-50"
-            class="bg-light-outline dark:bg-dark-outline text-light-surface"
+            class="bg-light-outline dark:bg-dark-outline"
           />
           <Swatch
             role="Outline"
             token="NV-80"
-            class="bg-light-outline-variant dark:bg-dark-outline-variant text-light-inverse-surface"
+            class="bg-light-outline-variant dark:bg-dark-outline-variant text-light-inverse-surface dark:text-dark-inverse-surface"
           />
         </div>
       </div>
@@ -298,30 +298,22 @@ export default function Scheme() {
           <Swatch
             role="Inverse Surface"
             token="N-20"
-            class="bg-light-inverse-surface dark:bg-dark-inverse-surface text-light-inverse-on-surface"
+            class="bg-light-inverse-surface dark:bg-dark-inverse-surface text-light-inverse-on-surface dark:text-dark-inverse-on-surface"
           />
           <Swatch
             role="Inverse On Surface"
             token="N-95"
-            class=" bg-light-inverse-on-surface dark:bg-dark-inverse-on-surface text-light-inverse-surface"
+            class=" bg-light-inverse-on-surface dark:bg-dark-inverse-on-surface text-light-inverse-surface dark:text-dark-inverse-surface"
           />
         </div>
         <Swatch
           role="Inverse Primary"
           token="P-80"
-          class="bg-light-inverse-primary dark:bg-dark-inverse-primary text-light-on-primary-container"
+          class="bg-light-inverse-primary dark:bg-dark-inverse-primary text-light-on-primary-container dark:text-dark-on-primary-container"
         />
-        <div class="grid grid-cols-2 gap-4">
-          <Swatch
-            role="Scrim"
-            token="N-0"
-            class="bg-light-scrim dark:bg-dark-scrim text-light-surface"
-          />
-          <Swatch
-            role="Shadow"
-            token="N-0"
-            class="bg-light-shadow dark:bg-dark-shadow text-light-surface"
-          />
+        <div class="grid grid-cols-2 gap-4 text-light-surface">
+          <Swatch role="Scrim" token="N-0" class="bg-light-scrim" />
+          <Swatch role="Shadow" token="N-0" class="bg-light-shadow" />
         </div>
       </div>
     </article>
