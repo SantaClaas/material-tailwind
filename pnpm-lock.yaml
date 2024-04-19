@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@material/material-color-utilities':
-        specifier: ./material-color-utilities/typescript
-        version: link:material-color-utilities/typescript
+        specifier: ./@material/material-color-utilities
+        version: link:@material/material-color-utilities
     devDependencies:
       tailwindcss:
         specifier: ^3.4.1

@@ -1,0 +1,8 @@
+pnpm-lock.yaml
+package-lock.json
+jsconfig.json
+example/
+material-color-utilities/
+# Include custom build of material-color-utilities
+!@material/material-color-utilities/
+.gitmodules
