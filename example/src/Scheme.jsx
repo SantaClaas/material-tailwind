@@ -12,13 +12,6 @@ function Swatch({ role, token, class: classes }) {
   );
 }
 
-/**
- * @param {{children: import("solid-js").JSX.Element}} properties
- */
-function SwatchGroupFixed({ children }) {
-  return <div>{children}</div>;
-}
-
 export default function Scheme() {
   return (
     <article class="grid grid-cols-4 gap-4">
