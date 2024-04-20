@@ -83,4 +83,4 @@ jobs:
           name: package-file
       - name: Publish artifacts to npm
         # Need to add --access public to publish scoped package
-        run: pnpm publish ${{ needs.build.outputs.PACKAGE }} --access public
+        run: npm publish ${{ needs.build.outputs.PACKAGE }} --access public
