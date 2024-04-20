@@ -49,7 +49,7 @@ jobs:
       - name: Bump version
         if: ${{ steps.check-tag.outputs.IS_RELEASE == 'true' }}
         # Bump ephemeral version based on git tag which we previously confirmed to be set
-        run: pnpm --no-git-tag-version version from-git
+        run: npm --no-git-tag-version version from-git
       - name: Pack up package
         id: pack
         if: ${{ steps.check-tag.outputs.IS_RELEASE == 'true' }}
