@@ -1,0 +1,85 @@
+name: Test, Build, Publish
+
+on:
+  push:
+    branches: ["main"]
+    tags:
+      # Publish npm package when a new tag is pushed
+      - "*.*.*"
+
+# Allow one concurrent deployment
+concurrency:
+  group: "workflow"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      IS_RELEASE: ${{ steps.check-tag.outputs.IS_RELEASE }}
+      PACKAGE: ${{ steps.pack.outputs.PACKAGE }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts
+          cache: pnpm
+      - run: pnpm install
+      - name: Build @material/material-color-utilites bundled dependency
+        run: pnpm run build:bundle
+      - name: Test and ensure dependencies were built as expected
+        run: pnpm test
+      - name: Check if tag is release tag
+        id: check-tag
+        run: |
+          echo ${{ github.event.ref }}
+          if [[ ${{ github.event.ref }} =~ ^refs/tags/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "IS_RELEASE=true" >> "$GITHUB_OUTPUT"
+          else
+              echo "IS_RELEASE=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Bump version
+        if: ${{ steps.check-tag.outputs.IS_RELEASE == 'true' }}
+        # Bump ephemeral version based on git tag which we previously confirmed to be set
+        run: pnpm --no-git-tag-version version from-git
+      - name: Pack up package
+        id: pack
+        if: ${{ steps.check-tag.outputs.IS_RELEASE == 'true' }}
+
+        # Write the output of the pack command to the PACKAGE environment variable
+        # The output of the pack command is the path to generated the tarball
+        # Used later to upload the artifact
+        run: echo "PACKAGE=$(pnpm pack)" >> "$GITHUB_OUTPUT"
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ steps.check-tag.outputs.IS_RELEASE == 'true' }}
+        with:
+          name: package-file
+          # Now we only need to upload the tarball which should have all the files npm cares for
+          path: ${{ steps.pack.outputs.PACKAGE }}
+
+  publish-npm:
+    # Only publish when a release tag is pushed
+    needs: build
+    if: ${{ needs.build.outputs.IS_RELEASE == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      PACKAGE: ${{ needs.build.outputs.PACKAGE }}
+    steps:
+      - name: Setup .npmrc file to publish to npm
+        run: echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > .npmrc
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: package-file
+      - name: Publish artifacts to npm
+        # Need to add --access public to publish scoped package
+        run: pnpm publish ${PACKAGE} --access public
