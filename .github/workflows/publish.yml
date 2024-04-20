@@ -72,16 +72,13 @@ jobs:
     needs: build
     if: ${{ needs.build.outputs.IS_RELEASE == 'true' }}
     runs-on: ubuntu-latest
-    env:
-      NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      PACKAGE: ${{ needs.build.outputs.PACKAGE }}
     steps:
       - name: Setup .npmrc file to publish to npm
-        run: echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > .npmrc
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: package-file
       - name: Publish artifacts to npm
         # Need to add --access public to publish scoped package
-        run: pnpm publish ${PACKAGE} --access public
+        run: pnpm publish ${{ needs.build.outputs.PACKAGE }} --access public
