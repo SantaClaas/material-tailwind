@@ -1,0 +1,12 @@
+# Contributing
+
+## Types but not TypeScript
+
+Types have to be defined and are enforced but instead of writing TypeScript files we use plain JavaScript with
+JSDoc to use types. This allows us to write safe code without needing an additional compilation step.
+Tooling like VS Code picks automatically picks up `jsconfig.json` which is equivalent to `tsconfig.json` and helps you
+write type safe code. Meaning the code would still pass `tsc` if it were run.
+
+## Versioning
+
+Versions are controlled using git tags which get picked up by GitHub actions. No need to manually update `package.json`.
