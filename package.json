@@ -15,12 +15,17 @@
   "private": false,
   "version": "0.1.1",
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "test": "vitest"
+  },
   "dependencies": {
     "@material/material-color-utilities": "./@material/material-color-utilities",
     "tailwindcss": "^3.4.1"
   },
   "bundledDependencies": [
     "@material/material-color-utilities"
-  ]
+  ],
+  "devDependencies": {
+    "vitest": "^1.5.0"
+  }
 }
