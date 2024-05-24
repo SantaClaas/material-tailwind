@@ -86,4 +86,4 @@ jobs:
         # Need to add --access public to publish scoped package
         run: npm publish ${{ needs.build.outputs.PACKAGE }} --provenance --access public
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
