@@ -14,6 +14,9 @@ concurrency:
   group: "workflow"
   cancel-in-progress: true
 
+permissions:
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -75,12 +78,12 @@ jobs:
     if: ${{ needs.build.outputs.IS_RELEASE == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Setup .npmrc file to publish to npm
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: package-file
       - name: Publish artifacts to npm
         # Need to add --access public to publish scoped package
-        run: npm publish ${{ needs.build.outputs.PACKAGE }} --access public
+        run: npm publish ${{ needs.build.outputs.PACKAGE }} --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
