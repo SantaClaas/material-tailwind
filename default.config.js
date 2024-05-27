@@ -7,11 +7,11 @@
 const defaultConfiguration = {
   extend: {
     borderRadius: {
-      extraSmall: "0.25rem",
+      "extra-small": "0.25rem",
       small: "0.5rem",
       medium: "0.75rem",
       large: "1rem",
-      extraLarge: "1.75rem",
+      "extra-large": "1.75rem",
     },
     boxShadow: {
       // I think these were based on Figma Material Design Kit
