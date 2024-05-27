@@ -11,3 +11,4 @@ build.js
 index.test.js
 .github/
 CONTRIBUTING
+*.snapshot.json
