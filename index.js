@@ -158,8 +158,11 @@ function createTheme(sourceColor) {
   /**
    * @type {Partial<CustomThemeConfig & { extend: Partial<CustomThemeConfig> }>}
    */
-  const tailwindTheme = {
-    ...defaultConfiguration,
+  const tailwindTheme = defaultConfiguration;
+
+  // Set colors
+  tailwindTheme.extend = {
+    ...tailwindTheme.extend,
     colors: {
       source: sourceColor,
       ...colors,
