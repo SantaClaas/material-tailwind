@@ -13,14 +13,15 @@
     "url": "https://github.com/SantaClaas/material-tailwind.git"
   },
   "private": false,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "exports": {
     ".": "./index.js"
   },
   "scripts": {
     "build:bundle": "node ./build.js",
-    "test": "vitest"
+    "test": "vitest",
+    "create-definitions": "tsc"
   },
   "dependencies": {
     "@material/material-color-utilities": "./@material/material-color-utilities",
@@ -30,6 +31,8 @@
     "@material/material-color-utilities"
   ],
   "devDependencies": {
+    "typescript": "^5.4.5",
     "vitest": "^1.5.0"
-  }
+  },
+  "types": "./index.d.ts"
 }

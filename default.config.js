@@ -2,6 +2,7 @@
 
 /**
  * @type {Partial<CustomThemeConfig & { extend: Partial<CustomThemeConfig> }>}
+ * @private
  */
 const defaultConfiguration = {
   borderRadius: {
