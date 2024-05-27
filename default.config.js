@@ -43,66 +43,24 @@ const defaultConfiguration = {
         "3.5625rem",
         { fontWeight: "400", letterSpacing: "-0.25px", lineHeight: "4rem" },
       ],
-      "display-md": [
-        "2.8125rem",
-        { fontWeight: "400", letterSpacing: "0px", lineHeight: "3.25rem" },
-      ],
-      "display-sm": [
-        "2.25rem",
-        { fontWeight: "400", letterSpacing: "0px", lineHeight: "2.75rem" },
-      ],
+      "display-md": ["2.8125rem", { fontWeight: "400", lineHeight: "3.25rem" }],
+      "display-sm": ["2.25rem", { fontWeight: "400", lineHeight: "2.75rem" }],
 
-      "headline-lg": [
-        "2rem",
-        { fontWeight: "400", letterSpacing: "0px", lineHeight: "2.5rem" },
-      ],
-      "headline-md": [
-        "1.75rem",
-        { fontWeight: "400", letterSpacing: "0px", lineHeight: "2.25rem" },
-      ],
-      "headline-sm": [
-        "1.5rem",
-        { fontWeight: "400", letterSpacing: "0px", lineHeight: "2rem" },
-      ],
+      "headline-lg": ["2rem", { fontWeight: "400", lineHeight: "2.5rem" }],
+      "headline-md": ["1.75rem", { fontWeight: "400", lineHeight: "2.25rem" }],
+      "headline-sm": ["1.5rem", { fontWeight: "400", lineHeight: "2rem" }],
 
-      "body-lg": [
-        "1rem",
-        { fontWeight: "400", letterSpacing: "0.5px", lineHeight: "1.5rem" },
-      ],
-      "body-md": [
-        "0.875rem",
-        { fontWeight: "400", letterSpacing: "0.25px", lineHeight: "1.25rem" },
-      ],
-      "body-sm": [
-        "0.75rem",
-        { fontWeight: "400", letterSpacing: "0.4px", lineHeight: "1rem" },
-      ],
+      "body-lg": ["1rem", { fontWeight: "400", lineHeight: "1.5rem" }],
+      "body-md": ["0.875rem", { fontWeight: "400", lineHeight: "1.25rem" }],
+      "body-sm": ["0.75rem", { fontWeight: "400", lineHeight: "1rem" }],
 
-      "label-lg": [
-        "0.875rem",
-        { fontWeight: "500", letterSpacing: "0.10px", lineHeight: "1.25rem" },
-      ],
-      "label-md": [
-        "0.75rem",
-        { fontWeight: "500", letterSpacing: "0.5px", lineHeight: "1rem" },
-      ],
-      "label-sm": [
-        "0.675rem",
-        { fontWeight: "500", letterSpacing: "0.5px", lineHeight: "1rem" },
-      ],
+      "label-lg": ["0.875rem", { fontWeight: "500", lineHeight: "1.25rem" }],
+      "label-md": ["0.75rem", { fontWeight: "500", lineHeight: "1rem" }],
+      "label-sm": ["0.675rem", { fontWeight: "500", lineHeight: "1rem" }],
 
-      "title-lg": [
-        "1.375rem",
-        { fontWeight: "400", letterSpacing: "0px", lineHeight: "1.75rem" },
-      ],
-      "title-md": [
-        "1rem",
-        { fontWeight: "500", letterSpacing: "0.15px", lineHeight: "1.5rem" },
-      ],
-      "title-sm": [
-        "0.875rem",
-        { fontWeight: "500", letterSpacing: "0.10px", lineHeight: "1.25rem" },
-      ],
+      "title-lg": ["1.375rem", { fontWeight: "400", lineHeight: "1.75rem" }],
+      "title-md": ["1rem", { fontWeight: "500", lineHeight: "1.5rem" }],
+      "title-sm": ["0.875rem", { fontWeight: "500", lineHeight: "1.25rem" }],
     },
 
     fontWeight: {
@@ -125,28 +83,6 @@ const defaultConfiguration = {
       "title-lg": "400",
       "title-md": "500",
       "title-sm": "500",
-    },
-
-    letterSpacing: {
-      "display-lg": "-0.25px",
-      "display-md": "0px",
-      "display-sm": "0px",
-
-      "headline-lg": "0px",
-      "headline-md": "0px",
-      "headline-sm": "0px",
-
-      "body-lg": "0.5px",
-      "body-md": "0.25px",
-      "body-sm": "0.4px",
-
-      "label-lg": "0.10px",
-      "label-md": "0.5px",
-      "label-sm": "0.5px",
-
-      "title-lg": "0px",
-      "title-md": "0.15px",
-      "title-sm": "0.10px",
     },
 
     lineHeight: {
