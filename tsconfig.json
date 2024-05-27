@@ -1,0 +1,18 @@
+{
+  "exclude": [
+    "@material",
+    "example",
+    "node_modules",
+    "material-color-utilities"
+  ],
+  "include": ["index.js"],
+  "compilerOptions": {
+    "checkJs": true,
+    "allowJs": true,
+    "strict": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationMap": true,
+    "esModuleInterop": true
+  }
+}

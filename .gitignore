@@ -25,3 +25,9 @@ dist-ssr
 
 # Genrated custom build
 @material/
+
+# Generated TypeScript declarations
+*.d.ts
+
+# Generated TypeScript declaration maps
+*.d.ts.map
