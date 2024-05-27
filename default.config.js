@@ -39,10 +39,7 @@ const defaultConfiguration = {
     },
 
     fontSize: {
-      "display-lg": [
-        "3.5625rem",
-        { fontWeight: "400", letterSpacing: "-0.25px", lineHeight: "4rem" },
-      ],
+      "display-lg": ["3.5625rem", { fontWeight: "400", lineHeight: "4rem" }],
       "display-md": ["2.8125rem", { fontWeight: "400", lineHeight: "3.25rem" }],
       "display-sm": ["2.25rem", { fontWeight: "400", lineHeight: "2.75rem" }],
 
