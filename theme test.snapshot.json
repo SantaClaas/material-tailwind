@@ -1,11 +1,11 @@
 {
   "extend": {
     "borderRadius": {
-      "extraSmall": "0.25rem",
+      "extra-small": "0.25rem",
       "small": "0.5rem",
       "medium": "0.75rem",
       "large": "1rem",
-      "extraLarge": "1.75rem"
+      "extra-large": "1.75rem"
     },
     "boxShadow": {
       "elevation-light-level-1": "0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3)",
