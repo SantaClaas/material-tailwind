@@ -13,7 +13,7 @@
     "url": "https://github.com/SantaClaas/material-tailwind.git"
   },
   "private": false,
-  "version": "0.4.0",
+  "version": "0.0.0",
   "type": "module",
   "exports": {
     ".": "./index.js"
