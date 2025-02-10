@@ -19,7 +19,6 @@
     ".": "./index.js"
   },
   "scripts": {
-    "build:bundle": "node ./build.js",
     "test": "vitest",
     "create-definitions": "tsc"
   },

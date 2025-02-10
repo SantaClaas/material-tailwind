@@ -7,7 +7,6 @@ material-color-utilities/
 # Don't include custom build of material-color-utilities as it will be bundled by "bundledDependencies" in package.json
 @material/
 .gitmodules
-build.js
 index.test.js
 .github/
 CONTRIBUTING

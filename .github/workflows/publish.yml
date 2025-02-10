@@ -38,8 +38,6 @@ jobs:
           node-version: lts/*
           cache: pnpm
       - run: pnpm install
-      - name: Build @material/material-color-utilites bundled dependency
-        run: pnpm run build:bundle
       - name: Test and ensure dependencies were built as expected
         run: pnpm test
       - name: Create type definitions
