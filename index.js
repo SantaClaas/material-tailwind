@@ -73,7 +73,7 @@ function generatePaletteSteps(palette) {
  * @param {PaletteArray} materialPalettes
  * @returns {RecursiveKeyValuePair}
  */
-function createPalletes(materialPalettes) {
+function createPallets(materialPalettes) {
   /** @type {Record<string, RecursiveKeyValuePair>} */
   const palettes = {};
   for (let [name, palette] of materialPalettes) {
@@ -120,7 +120,7 @@ function createColors(schemes) {
  * @returns {Partial<CustomThemeConfig>}
  */
 function createTheme(sourceColor) {
-  // Use new DynamicSchmeme as in
+  // Use new DynamicScheme as in
   // https://github.com/material-foundation/material-color-utilities/blob/main/make_schemes.md
   const color = Hct.fromInt(argbFromHex(sourceColor));
   const light = new SchemeTonalSpot(color, false, 0);
@@ -128,14 +128,14 @@ function createTheme(sourceColor) {
 
   const colors = createColors({ light, dark });
 
-  // The palletes are the same for light and dark
+  // The pallets are the same for light and dark
   /** @type {PaletteArray} */
-  const sourcePalletes = Object.entries(light)
+  const sourcePallets = Object.entries(light)
     .filter(([, value]) => value instanceof TonalPalette)
     // Remove "palette" postfix
     .map(([key, value]) => [key.replace("Palette", ""), value]);
 
-  const palletes = createPalletes(sourcePalletes);
+  const pallets = createPallets(sourcePallets);
   //TODO find out what tone high and medium contrast have
   // console.debug("materialTheme", materialTheme);
   // let source = Hct.fromInt(0x673ab7);
@@ -166,7 +166,7 @@ function createTheme(sourceColor) {
     colors: {
       source: sourceColor,
       ...colors,
-      ...palletes,
+      ...pallets,
     },
   };
 
