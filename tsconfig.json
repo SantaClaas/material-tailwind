@@ -1,12 +1,10 @@
 {
-  "exclude": [
-    "@material",
-    "example",
-    "node_modules",
-    "material-color-utilities"
-  ],
+  "exclude": ["example", "node_modules"],
   "include": ["index.js"],
+
   "compilerOptions": {
+    "moduleResolution": "nodenext",
+    "module": "NodeNext",
     "checkJs": true,
     "allowJs": true,
     "strict": true,

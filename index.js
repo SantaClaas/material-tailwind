@@ -13,18 +13,9 @@ import plugin from "tailwindcss/plugin.js";
 
 import defaultConfiguration from "./default.config.js";
 
+//TODO check back if Tailwind CSS exports types after 4.0.6
 /**
- * @typedef {import("tailwindcss").Config} Config
- * @typedef {import("tailwindcss/types/config").CustomThemeConfig} CustomThemeConfig
- * @typedef {import("tailwindcss/types/config").OptionalConfig} OptionalConfig
- * @typedef {import("tailwindcss/types/config").PluginAPI} PluginAPI
- * @typedef {import("tailwindcss/types/config").RecursiveKeyValuePair<string,string>} RecursiveKeyValuePair
- * @typedef {import("@material/material-color-utilities").Scheme} Scheme
- */
-
-/**
- * @template {*} T
- * @typedef {import("tailwindcss/types/config").ResolvableTo<T>} ResolvableTo<T>
+ * @import {Config} from "tailwindcss"
  */
 
 /**
@@ -40,7 +31,6 @@ function camelToKebabCase(value) {
 /**
  *
  * @param {TonalPalette} palette
- * @returns {RecursiveKeyValuePair}
  */
 function generatePaletteSteps(palette) {
   // Supported color steps
@@ -56,9 +46,7 @@ function generatePaletteSteps(palette) {
     0, 5, 10, 15, 20, 25, 30, 35, 40, 50, 60, 70, 80, 90, 95, 98, 99, 100,
   ];
 
-  /**
-   * @type {ResolvableTo<RecursiveKeyValuePair>}
-   */
+  /** @type {Record<string, string>} */
   const result = {};
   for (const step of materialPalletteSteps) {
     result[step] = hexFromArgb(palette.tone(step));
@@ -71,10 +59,9 @@ function generatePaletteSteps(palette) {
 /**
  *
  * @param {PaletteArray} materialPalettes
- * @returns {RecursiveKeyValuePair}
  */
 function createPalettes(materialPalettes) {
-  /** @type {Record<string, RecursiveKeyValuePair>} */
+  /** @type {Record<string, Record<string, string>>} */
   const palettes = {};
   for (let [name, palette] of materialPalettes) {
     const paletteSteps = generatePaletteSteps(palette);
@@ -88,10 +75,10 @@ function createPalettes(materialPalettes) {
 /**
  *
  * @param {{[key: string]: DynamicScheme}} schemes
- * @returns {RecursiveKeyValuePair}
+ * @returns {Record<string, Record<string, string>>}
  */
 function createColors(schemes) {
-  /** @type {RecursiveKeyValuePair} */
+  /** @type {Record<string, Record<string, string>>} */
   const colors = {};
 
   for (let [name, scheme] of Object.entries(schemes)) {
@@ -114,11 +101,7 @@ function createColors(schemes) {
   return colors;
 }
 
-/**
- *
- * @param {string} sourceColor
- * @returns {Partial<CustomThemeConfig>}
- */
+/** @param {string} sourceColor */
 function createTheme(sourceColor) {
   // Use new DynamicScheme as in
   // https://github.com/material-foundation/material-color-utilities/blob/main/make_schemes.md
@@ -155,9 +138,6 @@ function createTheme(sourceColor) {
   //   lightHighSecondary,
   // });
 
-  /**
-   * @type {Partial<CustomThemeConfig & { extend: Partial<CustomThemeConfig> }>}
-   */
   const tailwindTheme = defaultConfiguration;
 
   // Set colors
@@ -181,15 +161,12 @@ function createTheme(sourceColor) {
 /**
  * Creates the plugin based on the configuration
  * @param {Configuration} configuration
- * @returns
+ * @returns {ReturnType<typeof plugin>}
  */
 export default function materialTailwind(configuration) {
-  /**
-   * @type {Partial<CustomThemeConfig>}
-   */
   const tailwindTheme = createTheme(configuration.source);
 
-  /** @type {import("tailwindcss/types/config").PluginCreator} */
+  /** @type {Parameters<typeof plugin>[0]} */
   const creator = function (_api) {};
   return plugin(creator, { theme: tailwindTheme });
 }

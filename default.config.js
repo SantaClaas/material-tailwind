@@ -1,10 +1,4 @@
-/** @typedef {import("tailwindcss/types/config").CustomThemeConfig} CustomThemeConfig */
-
-/**
- * @type {Partial<CustomThemeConfig & { extend: Partial<CustomThemeConfig> }>}
- * @private
- */
-const defaultConfiguration = {
+export default {
   extend: {
     borderRadius: {
       "extra-small": "0.25rem",
@@ -170,4 +164,4 @@ const defaultConfiguration = {
   },
 };
 
-export default defaultConfiguration;
+// export default defaultConfiguration;
