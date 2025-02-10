@@ -1,3 +1,6 @@
+/**
+ * @import plugin from "tailwindcss/plugin.js"
+ * @type {Required<Required<Parameters<typeof plugin>>[1]>["theme"]} */
 export default {
   extend: {
     borderRadius: {

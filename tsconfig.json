@@ -1,16 +1,17 @@
 {
-  "exclude": ["example", "node_modules"],
+  "exclude": ["example", "node_modules", "dist"],
   "include": ["index.js"],
 
   "compilerOptions": {
-    "moduleResolution": "nodenext",
-    "module": "NodeNext",
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "target": "ESNext",
     "checkJs": true,
     "allowJs": true,
     "strict": true,
     "declaration": true,
     "emitDeclarationOnly": true,
     "declarationMap": true,
-    "esModuleInterop": true
+    "outDir": "dist"
   }
 }
