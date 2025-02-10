@@ -48,7 +48,7 @@ function generatePaletteSteps(palette) {
   // whereas Tailwind goes from 50 to 950
   // We support material way of thinking here
 
-  // Create Tonal palletes
+  // Create Tonal pallettes
   // See https://m3.material.io/styles/color/system/how-the-system-works#3ce9da92-a118-4692-8b2c-c5c52a413fa6
   // And https://material-foundation.github.io/material-theme-builder/
   //TODO check out tailwind dynamic color values and/or make configurable
@@ -73,7 +73,7 @@ function generatePaletteSteps(palette) {
  * @param {PaletteArray} materialPalettes
  * @returns {RecursiveKeyValuePair}
  */
-function createPallets(materialPalettes) {
+function createPalettes(materialPalettes) {
   /** @type {Record<string, RecursiveKeyValuePair>} */
   const palettes = {};
   for (let [name, palette] of materialPalettes) {
@@ -128,14 +128,14 @@ function createTheme(sourceColor) {
 
   const colors = createColors({ light, dark });
 
-  // The pallets are the same for light and dark
+  // The palettes are the same for light and dark
   /** @type {PaletteArray} */
-  const sourcePallets = Object.entries(light)
+  const sourcePalettes = Object.entries(light)
     .filter(([, value]) => value instanceof TonalPalette)
     // Remove "palette" postfix
     .map(([key, value]) => [key.replace("Palette", ""), value]);
 
-  const pallets = createPallets(sourcePallets);
+  const palettes = createPalettes(sourcePalettes);
   //TODO find out what tone high and medium contrast have
   // console.debug("materialTheme", materialTheme);
   // let source = Hct.fromInt(0x673ab7);
@@ -166,7 +166,7 @@ function createTheme(sourceColor) {
     colors: {
       source: sourceColor,
       ...colors,
-      ...pallets,
+      ...palettes,
     },
   };
 
