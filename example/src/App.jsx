@@ -1,4 +1,3 @@
-import "./App.css";
 import Scheme from "./Scheme";
 
 export default function App() {
