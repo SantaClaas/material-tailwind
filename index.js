@@ -74,11 +74,11 @@ function createPalettes(materialPalettes) {
 
 /**
  *
- * @param {{[key: string]: DynamicScheme}} schemes
- * @returns {Record<string, Record<string, string>>}
+ * @param {{ light: DynamicScheme, dark: DynamicScheme }} schemes
+ * @returns {Record<string, string | Record<string, string>>}
  */
 function createColors(schemes) {
-  /** @type {Record<string, Record<string, string>>} */
+  /** @type {Record<string, string | Record<string, string> >} */
   const colors = {};
 
   for (let [name, scheme] of Object.entries(schemes)) {
@@ -96,6 +96,18 @@ function createColors(schemes) {
 
     name = camelToKebabCase(name);
     colors[name] = schemeColors;
+  }
+
+  for (let [name, color] of Object.entries(MaterialDynamicColors)) {
+    // Only properties with color values
+    if (!(color instanceof DynamicColor)) continue;
+    const lightValue = schemes.light.getArgb(color);
+    const darkValue = schemes.dark.getArgb(color);
+    const lightHex = hexFromArgb(lightValue);
+    const darkHex = hexFromArgb(darkValue);
+    name = camelToKebabCase(name);
+
+    colors[name] = `light-dark(${lightHex}, ${darkHex})`;
   }
 
   return colors;
@@ -166,6 +178,7 @@ function createTheme(sourceColor) {
 export default function materialTailwind(configuration) {
   const tailwindTheme = createTheme(configuration.source);
 
+  //TODO use plugin.withOptions
   /** @type {Parameters<typeof plugin>[0]} */
   const creator = function (_api) {};
   return plugin(creator, { theme: tailwindTheme });
