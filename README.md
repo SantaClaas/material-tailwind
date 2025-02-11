@@ -17,6 +17,33 @@ npm install --save-dev @claas.dev/material-tailwind
 
 ### Configure plugin
 
+#### Tailwind CSS v4.0
+
+The plugin has to be set up outside of your CSS file where you import Tailwind CSS because it needs configuration.
+
+```js
+// ./plugin.js
+import materialTailwind from "@claas.dev/material-tailwind";
+
+export default materialTailwind({ source: "#0c1445" });
+```
+
+Then you need to import it with `@plugin`
+
+```css
+/* This is from your Tailwind CSS install */
+@import "tailwindcss";
+
+/* Import the plugin relative to your CSS file */
+@plugin "./plugin.js";
+```
+
+For reference you can look at an [example](https://github.com/SantaClaas/material-tailwind/tree/main/example) using SolidJS.
+
+Change the file names however you see fit.
+
+#### Tailwind CSS v3.0 (or v4.0 with configuration file)
+
 In your Tailwind CSS configuration e.g. `tailwind.config.js`
 
 ```js
@@ -32,8 +59,6 @@ export default {
   plugins: [materialTailwind({ source: "#0c1445" })],
 };
 ```
-
-For reference you can look at an [example](https://github.com/SantaClaas/material-tailwind/tree/main/example) using SolidJS.
 
 # How it works
 
