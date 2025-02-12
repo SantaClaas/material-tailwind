@@ -57,14 +57,14 @@ jobs:
         run: npm --no-git-tag-version version from-git
       - name: Pack up package
         id: pack
-        if: ${{ steps.check-tag.outputs.IS_RELEASE == 'true' }}
+        # if: ${{ steps.check-tag.outputs.IS_RELEASE == 'true' }}
 
         # Write the output of the pack command to the PACKAGE environment variable
         # The output of the pack command is the path to generated the tarball
         # Used later to upload the artifact
         run: |
           $PACKAGE_PATH="$(pnpm pack)"
-          echo $PACKAGE_PATH
+          echo "$PACKAGE_PATH"
           echo "PACKAGE=$(pnpm pack)" >> $GITHUB_OUTPUT
 
       - name: Archive production artifacts
