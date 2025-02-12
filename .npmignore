@@ -11,3 +11,4 @@ index.test.js
 .github/
 CONTRIBUTING
 *.snapshot.json
+.vscode/
