@@ -61,4 +61,5 @@ jobs:
       - name: Publish artifacts to npm
         if: ${{ steps.check-tag.outputs.IS_RELEASE == 'true' }}
         # Need to add --access public to publish scoped package
-        run: pnpm publish --provenance --access public
+        # Disable git check as the version was bumped
+        run: pnpm publish --no-git-checks --provenance --access public
