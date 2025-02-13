@@ -55,36 +55,10 @@ jobs:
         if: ${{ steps.check-tag.outputs.IS_RELEASE == 'true' }}
         # Bump ephemeral version based on git tag which we previously confirmed to be set
         run: npm --no-git-tag-version version from-git
-      - name: Pack up package
-        id: pack
-        # if: ${{ steps.check-tag.outputs.IS_RELEASE == 'true' }}
-
-        # Write the output of the pack command to the PACKAGE environment variable
-        # The output of the pack command is the path to generated the tarball
-        # Used later to upload the artifact
-        run: pnpm pack --pack-destination output
-
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
-        if: ${{ steps.check-tag.outputs.IS_RELEASE == 'true' }}
-        with:
-          name: package-file
-          # Now we only need to upload the tarball which should have all the files npm cares for
-          path: output
-
-  publish-npm:
-    # Only publish when a release tag is pushed
-    needs: build
-    if: ${{ needs.build.outputs.IS_RELEASE == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      # The npmrc is created here and is not the same as in the repository as that does not exist here
       - name: Setup .npmrc file to publish to npm
+        if: ${{ steps.check-tag.outputs.IS_RELEASE == 'true' }}
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: package-file
       - name: Publish artifacts to npm
+        if: ${{ steps.check-tag.outputs.IS_RELEASE == 'true' }}
         # Need to add --access public to publish scoped package
-        run: npm publish output --provenance --access public
+        run: pnpm publish --provenance --access public
