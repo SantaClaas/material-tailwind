@@ -99,20 +99,48 @@ function createColors(schemes) {
   for (let [name, color] of Object.entries(MaterialDynamicColors)) {
     // Only properties with color values
     if (!(color instanceof DynamicColor)) continue;
-    const lightValue = schemes.light.getArgb(color);
-    const darkValue = schemes.dark.getArgb(color);
-    const lightHex = hexFromArgb(lightValue);
-    const darkHex = hexFromArgb(darkValue);
+    let lightValue = schemes.light.getArgb(color);
+    let darkValue = schemes.dark.getArgb(color);
+    let lightHex = hexFromArgb(lightValue);
+    let darkHex = hexFromArgb(darkValue);
     name = camelToKebabCase(name);
 
     colors[name] = `light-dark(${lightHex}, ${darkHex})`;
+
+    // Reduced contrast
+    lightValue = schemes["light-reduced-contrast"].getArgb(color);
+    darkValue = schemes["dark-reduced-contrast"].getArgb(color);
+    lightHex = hexFromArgb(lightValue);
+    darkHex = hexFromArgb(darkValue);
+    name = camelToKebabCase(name);
+    colors[`reduced-contrast-${name}`] = `light-dark(${lightHex}, ${darkHex})`;
+
+    // Medium contrast
+    lightValue = schemes["light-medium-contrast"].getArgb(color);
+    darkValue = schemes["dark-medium-contrast"].getArgb(color);
+    lightHex = hexFromArgb(lightValue);
+    darkHex = hexFromArgb(darkValue);
+    name = camelToKebabCase(name);
+    colors[`medium-contrast-${name}`] = `light-dark(${lightHex}, ${darkHex})`;
+
+    // High contrast
+    lightValue = schemes["light-high-contrast"].getArgb(color);
+    darkValue = schemes["dark-high-contrast"].getArgb(color);
+    lightHex = hexFromArgb(lightValue);
+    darkHex = hexFromArgb(darkValue);
+    name = camelToKebabCase(name);
+    colors[`high-contrast-${name}`] = `light-dark(${lightHex}, ${darkHex})`;
   }
 
   return colors;
 }
 
-/** @typedef {"light-reduced-contrast" | "light" | "light-medium-contrast" | "light-high-contrast" | "dark-reduced-contrast" | "dark" | "dark-medium-contrast" | "dark-high-contrast"} ContrastLevel */
-/** @typedef {Record<ContrastLevel, SchemeTonalSpot>} Schemes */
+/**
+ * @typedef {"light" | "dark"} Scheme
+ * @typedef {"reduced" | "medium" | "high"} Contrast
+ * @typedef {Scheme | `${Scheme}-${Contrast}-contrast`} SchemeName
+ * @typedef {Record<SchemeName, SchemeTonalSpot>} Schemes
+ */
 
 /**
  * Using contrast values as recommended https://github.com/material-foundation/material-color-utilities/blob/9889de141b3b5194b8574f9e378e55f4428bdb5e/dev_guide/creating_color_scheme.md
