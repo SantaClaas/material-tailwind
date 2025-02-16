@@ -142,7 +142,7 @@ function createColors(schemes) {
  */
 
 /**
- * Using contrast values as recommended https://github.com/material-foundation/material-color-utilities/blob/9889de141b3b5194b8574f9e378e55f4428bdb5e/dev_guide/creating_color_scheme.md
+ * Using contrast values as recommended by https://github.com/material-foundation/material-color-utilities/blob/9889de141b3b5194b8574f9e378e55f4428bdb5e/dev_guide/creating_color_scheme.md
  *
  * @param {string} sourceColor
  * @returns {Schemes}
@@ -193,16 +193,13 @@ function createTheme(sourceColor) {
 
 class SourceColorUndefinedError extends Error {}
 
-//   return plugin(creator, { theme: tailwindTheme });
-// }
 //TODO fix types when Tailwind CSS version > 4.0.6 is released
 // This is based on code I saw in Tailwinds own plugin repositories like @tailwindcss/typography
 export default plugin.withOptions(
   () => {
     return () => {};
   },
-  /** @type {(options?: { sourceColor?: string }) => Partial<Config>} */ (
-    (options = {}) => {
+    (options) => {
       const sourceColor =
         // Name when used in new Tailwind CSS v4 CSS file configuration
         options["source-color"] ??
@@ -217,6 +214,7 @@ export default plugin.withOptions(
         throw new SourceColorUndefinedError(
           "Please configure a source color in your Tailwind CSS file to use @claas.dev/material-tailwind e.g. `@plugin '@claas.dev/material-tailwind' { sourceColor: '#0c1445' }`"
         );
+
       const tailwindTheme = createTheme(sourceColor);
       return { theme: tailwindTheme };
     }
