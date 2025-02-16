@@ -19,6 +19,7 @@ npm install --save-dev @claas.dev/material-tailwind
 @import "tailwindcss";
 
 @plugin "@claas.dev/material-tailwind" {
+  /* Pick your favorite color */
   source-color: #0c1445;
 }
 ```
