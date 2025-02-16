@@ -192,23 +192,34 @@ function createTheme(sourceColor) {
   return tailwindTheme;
 }
 
-/**
- * @typedef {Object} Configuration
- * @property {string} source - The source color as hex string to generate the theme colors from
- */
+class SourceColorUndefinedError extends Error {}
 
-/**
- * Creates the plugin based on the configuration
- * @param {Configuration} configuration
- * @returns {ReturnType<typeof plugin>}
- */
-export default function materialTailwind(configuration) {
-  const tailwindTheme = createTheme(configuration.source);
+//   return plugin(creator, { theme: tailwindTheme });
+// }
+//TODO fix types when Tailwind CSS version > 4.0.6 is released
+// This is based on code I saw in Tailwinds own plugin repositories like @tailwindcss/typography
+export default plugin.withOptions(
+  () => {
+    return () => {};
+  },
+  /** @type {(options?: { sourceColor?: string }) => Partial<Config>} */ (
+    (options = {}) => {
+      const sourceColor =
+        // Name when used in new Tailwind CSS v4 CSS file configuration
+        options["source-color"] ??
+        // Name when used in JS Tailwind CSS configuration
+        options.sourceColor ??
+        // Formatters don't support camelCase in CSS and screw this up so we are forgiving
+        options["sourcecolor"] ??
+        // Legacy option name
+        options.source;
 
-  //TODO use plugin.withOptions
-  /** @type {Parameters<typeof plugin>[0]} */
-  const creator = function (api) {
-    api.matchVariant;
-  };
-  return plugin(creator, { theme: tailwindTheme });
-}
+      if (sourceColor === undefined)
+        throw new SourceColorUndefinedError(
+          "Please configure a source color in your Tailwind CSS file to use @claas.dev/material-tailwind e.g. `@plugin '@claas.dev/material-tailwind' { sourceColor: '#0c1445' }`"
+        );
+      const tailwindTheme = createTheme(sourceColor);
+      return { theme: tailwindTheme };
+    }
+  )
+);

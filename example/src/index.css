@@ -1,3 +1,5 @@
 @import "tailwindcss";
 
-@plugin "../plugin";
+@plugin "@claas.dev/material-tailwind" {
+  source-color: #0c1445;
+}
