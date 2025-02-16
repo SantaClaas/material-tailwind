@@ -2,18 +2,16 @@ import {
   argbFromHex,
   hexFromArgb,
   TonalPalette,
-  DynamicScheme,
   SchemeTonalSpot,
   Hct,
   MaterialDynamicColors,
   DynamicColor,
-  // Using the repository as dependency as it includes color utilities not yet released
 } from "@material/material-color-utilities";
 import plugin from "tailwindcss/plugin.js";
 
 import defaultConfiguration from "./default.config.js";
 
-//TODO check back if Tailwind CSS exports types after 4.0.6
+//TODO update Tailwind CSS to a version after 4.0.6 to fix types
 /**
  * @import {Config} from "tailwindcss"
  */
@@ -74,7 +72,7 @@ function createPalettes(materialPalettes) {
 
 /**
  *
- * @param {{ light: DynamicScheme, dark: DynamicScheme }} schemes
+ * @param {Schemes} schemes
  * @returns {Record<string, string | Record<string, string>>}
  */
 function createColors(schemes) {
@@ -113,42 +111,43 @@ function createColors(schemes) {
   return colors;
 }
 
+/** @typedef {"light-reduced-contrast" | "light" | "light-medium-contrast" | "light-high-contrast" | "dark-reduced-contrast" | "dark" | "dark-medium-contrast" | "dark-high-contrast"} ContrastLevel */
+/** @typedef {Record<ContrastLevel, SchemeTonalSpot>} Schemes */
+
+/**
+ * Using contrast values as recommended https://github.com/material-foundation/material-color-utilities/blob/9889de141b3b5194b8574f9e378e55f4428bdb5e/dev_guide/creating_color_scheme.md
+ *
+ * @param {string} sourceColor
+ * @returns {Schemes}
+ */
+function createSchemes(sourceColor) {
+  const color = Hct.fromInt(argbFromHex(sourceColor));
+
+  return {
+    "light-reduced-contrast": new SchemeTonalSpot(color, false, -1),
+    light: new SchemeTonalSpot(color, false, 0),
+    "light-medium-contrast": new SchemeTonalSpot(color, false, 0.5),
+    "light-high-contrast": new SchemeTonalSpot(color, false, 1),
+    "dark-reduced-contrast": new SchemeTonalSpot(color, true, -1),
+    dark: new SchemeTonalSpot(color, true, 0),
+    "dark-medium-contrast": new SchemeTonalSpot(color, true, 0.5),
+    "dark-high-contrast": new SchemeTonalSpot(color, true, 1),
+  };
+}
+
 /** @param {string} sourceColor */
 function createTheme(sourceColor) {
-  // Use new DynamicScheme as in
-  // https://github.com/material-foundation/material-color-utilities/blob/main/make_schemes.md
-  const color = Hct.fromInt(argbFromHex(sourceColor));
-  const light = new SchemeTonalSpot(color, false, 0);
-  const dark = new SchemeTonalSpot(color, true, 0);
-
-  const colors = createColors({ light, dark });
+  const schemes = createSchemes(sourceColor);
+  const colors = createColors(schemes);
 
   // The palettes are the same for light and dark
   /** @type {PaletteArray} */
-  const sourcePalettes = Object.entries(light)
+  const sourcePalettes = Object.entries(schemes.light)
     .filter(([, value]) => value instanceof TonalPalette)
     // Remove "palette" postfix
     .map(([key, value]) => [key.replace("Palette", ""), value]);
 
   const palettes = createPalettes(sourcePalettes);
-  //TODO find out what tone high and medium contrast have
-  // console.debug("materialTheme", materialTheme);
-  // let source = Hct.fromInt(0x673ab7);
-  // const lightPrimary = Hct.fromInt(0x68548e);
-  // const lightMediumPrimary = Hct.fromInt(0x4b3970);
-  // const lightHighPrimary = Hct.fromInt(0x2a164d);
-  // const lightSecondary = Hct.fromInt(0x635b70);
-  // const lightMediumSecondary = Hct.fromInt(0x473f54);
-  // const lightHighSecondary = Hct.fromInt(0x251f32);
-  // console.log("hct", {
-  //   source,
-  //   lightPrimary,
-  //   lightMediumPrimary,
-  //   lightHighPrimary,
-  //   lightSecondary,
-  //   lightMediumSecondary,
-  //   lightHighSecondary,
-  // });
 
   const tailwindTheme = defaultConfiguration;
 
@@ -180,6 +179,8 @@ export default function materialTailwind(configuration) {
 
   //TODO use plugin.withOptions
   /** @type {Parameters<typeof plugin>[0]} */
-  const creator = function (_api) {};
+  const creator = function (api) {
+    api.matchVariant;
+  };
   return plugin(creator, { theme: tailwindTheme });
 }
