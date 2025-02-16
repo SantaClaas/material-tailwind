@@ -29,8 +29,9 @@ function camelToKebabCase(value) {
 /**
  *
  * @param {TonalPalette} palette
+ * @returns {Generator<[number, string]>}
  */
-function generatePaletteSteps(palette) {
+function* generatePaletteSteps(palette) {
   // Supported color steps
   // Material Design goes from 0 to 100 for lightness (like percent)
   // whereas Tailwind goes from 50 to 950
@@ -44,13 +45,9 @@ function generatePaletteSteps(palette) {
     0, 5, 10, 15, 20, 25, 30, 35, 40, 50, 60, 70, 80, 90, 95, 98, 99, 100,
   ];
 
-  /** @type {Record<string, string>} */
-  const result = {};
   for (const step of materialPalletteSteps) {
-    result[step] = hexFromArgb(palette.tone(step));
+    yield [step, hexFromArgb(palette.tone(step))];
   }
-
-  return result;
 }
 
 /** @typedef {[name: string, palette: TonalPalette][]} PaletteArray */
@@ -59,12 +56,14 @@ function generatePaletteSteps(palette) {
  * @param {PaletteArray} materialPalettes
  */
 function createPalettes(materialPalettes) {
-  /** @type {Record<string, Record<string, string>>} */
+  /** @type {Record<string, string>} */
   const palettes = {};
   for (let [name, palette] of materialPalettes) {
-    const paletteSteps = generatePaletteSteps(palette);
     name = camelToKebabCase(name);
-    palettes[name] = paletteSteps;
+
+    for (const [step, color] of generatePaletteSteps(palette)) {
+      palettes[`${name}-${step}`] = color;
+    }
   }
 
   return palettes;
