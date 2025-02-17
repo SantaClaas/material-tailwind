@@ -197,26 +197,27 @@ class SourceColorUndefinedError extends Error {}
 // This is based on code I saw in Tailwinds own plugin repositories like @tailwindcss/typography
 export default plugin.withOptions(
   () => {
-    return () => {};
+    return (api) => {
+      api.addBase();
+    };
   },
-    (options) => {
-      const sourceColor =
-        // Name when used in new Tailwind CSS v4 CSS file configuration
-        options["source-color"] ??
-        // Name when used in JS Tailwind CSS configuration
-        options.sourceColor ??
-        // Formatters don't support camelCase in CSS and screw this up so we are forgiving
-        options["sourcecolor"] ??
-        // Legacy option name
-        options.source;
+  (options) => {
+    const sourceColor =
+      // Name when used in new Tailwind CSS v4 CSS file configuration
+      options["source-color"] ??
+      // Name when used in JS Tailwind CSS configuration
+      options.sourceColor ??
+      // Formatters don't support camelCase in CSS and screw this up so we are forgiving
+      options["sourcecolor"] ??
+      // Legacy option name
+      options.source;
 
-      if (sourceColor === undefined)
-        throw new SourceColorUndefinedError(
-          "Please configure a source color in your Tailwind CSS file to use @claas.dev/material-tailwind e.g. `@plugin '@claas.dev/material-tailwind' { sourceColor: '#0c1445' }`"
-        );
+    if (sourceColor === undefined)
+      throw new SourceColorUndefinedError(
+        "Please configure a source color in your Tailwind CSS file to use @claas.dev/material-tailwind e.g. `@plugin '@claas.dev/material-tailwind' { sourceColor: '#0c1445' }`"
+      );
 
-      const tailwindTheme = createTheme(sourceColor);
-      return { theme: tailwindTheme };
-    }
-  )
+    const tailwindTheme = createTheme(sourceColor);
+    return { theme: tailwindTheme };
+  }
 );
