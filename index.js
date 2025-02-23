@@ -211,6 +211,7 @@ class SourceColorUndefinedError extends Error {
 // Types are a bit cursed right now
 /**
  * @import {PluginCreator} from "tailwindcss/plugin"
+ * PluginWithConfig is missing the config and internal reference properties in this copied definition that is not exposed
  * @typedef {{ handler: PluginCreator}} PluginWithConfig
  * @type {{(options: {sourceColor: string} | {'source-color': string} | {source: string}) : PluginWithConfig}}x
  */
