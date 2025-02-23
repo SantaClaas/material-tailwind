@@ -191,33 +191,50 @@ function createTheme(sourceColor) {
   return tailwindTheme;
 }
 
-class SourceColorUndefinedError extends Error {}
+class PluginOptionsUndefinedError extends Error {
+  constructor() {
+    super(
+      "Please configure a source color in your Tailwind CSS file to use @claas.dev/material-tailwind e.g. `@plugin '@claas.dev/material-tailwind' { source-color: '#0c1445' }`"
+    );
+  }
+}
 
-//TODO fix types when Tailwind CSS version > 4.0.6 is released
+class SourceColorUndefinedError extends Error {
+  constructor() {
+    super(
+      "Please configure a source color in your Tailwind CSS file to use @claas.dev/material-tailwind e.g. `@plugin '@claas.dev/material-tailwind' { source-color: '#0c1445' }`"
+    );
+  }
+}
+
 // This is based on code I saw in Tailwinds own plugin repositories like @tailwindcss/typography
-export default plugin.withOptions(
+// Types are a bit cursed right now
+/**
+ * @import {PluginCreator} from "tailwindcss/plugin"
+ * @typedef {{ handler: PluginCreator}} PluginWithConfig
+ * @type {{(options: {sourceColor: string} | {'source-color': string} | {source: string}) : PluginWithConfig}}x
+ */
+// /** @type {import("tailwindcss/plugin").PluginsConfig} */
+const materialTailwindPlugin = plugin.withOptions(
   () => {
-    return (api) => {
-      api.addBase();
-    };
+    return (_api) => {};
   },
   (options) => {
-    const sourceColor =
-      // Name when used in new Tailwind CSS v4 CSS file configuration
-      options["source-color"] ??
-      // Name when used in JS Tailwind CSS configuration
-      options.sourceColor ??
-      // Formatters don't support camelCase in CSS and screw this up so we are forgiving
-      options["sourcecolor"] ??
-      // Legacy option name
-      options.source;
-
-    if (sourceColor === undefined)
-      throw new SourceColorUndefinedError(
-        "Please configure a source color in your Tailwind CSS file to use @claas.dev/material-tailwind e.g. `@plugin '@claas.dev/material-tailwind' { sourceColor: '#0c1445' }`"
-      );
+    let sourceColor;
+    if (options === undefined) throw new PluginOptionsUndefinedError();
+    if ("source-color" in options) {
+      sourceColor = options["source-color"];
+    } else if ("sourceColor" in options) {
+      sourceColor = options.sourceColor;
+    } else if ("source" in options) {
+      sourceColor = options.source;
+    } else {
+      throw new PluginOptionsUndefinedError();
+    }
 
     const tailwindTheme = createTheme(sourceColor);
     return { theme: tailwindTheme };
   }
 );
+
+export default materialTailwindPlugin;
