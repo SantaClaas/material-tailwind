@@ -70,7 +70,7 @@ function createPalettes(materialPalettes) {
 }
 
 /**
- *
+ * Creates colors
  * @param {Schemes} schemes
  * @returns {Record<string, string | Record<string, string>>}
  */
@@ -194,7 +194,7 @@ function createTheme(sourceColor) {
 class PluginOptionsUndefinedError extends Error {
   constructor() {
     super(
-      "Please configure a source color in your Tailwind CSS file to use @claas.dev/material-tailwind e.g. `@plugin '@claas.dev/material-tailwind' { source-color: '#0c1445' }`"
+      "Please configure a source color in your Tailwind CSS file to use @claas.dev/material-tailwind e.g. `@plugin '@claas.dev/material-tailwind' { source-color: '#0c1445' }`",
     );
   }
 }
@@ -202,7 +202,7 @@ class PluginOptionsUndefinedError extends Error {
 class SourceColorUndefinedError extends Error {
   constructor() {
     super(
-      "Please configure a source color in your Tailwind CSS file to use @claas.dev/material-tailwind e.g. `@plugin '@claas.dev/material-tailwind' { source-color: '#0c1445' }`"
+      "Please configure a source color in your Tailwind CSS file to use @claas.dev/material-tailwind e.g. `@plugin '@claas.dev/material-tailwind' { source-color: '#0c1445' }`",
     );
   }
 }
@@ -235,7 +235,7 @@ const materialTailwindPlugin = plugin.withOptions(
 
     const tailwindTheme = createTheme(sourceColor);
     return { theme: tailwindTheme };
-  }
+  },
 );
 
 export default materialTailwindPlugin;
