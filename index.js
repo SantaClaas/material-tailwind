@@ -210,12 +210,9 @@ class SourceColorUndefinedError extends Error {
 // This is based on code I saw in Tailwinds own plugin repositories like @tailwindcss/typography
 // Types are a bit cursed right now
 /**
- * @import {PluginCreator} from "tailwindcss/plugin"
- * PluginWithConfig is missing the config and internal reference properties in this copied definition that is not exposed
- * @typedef {{ handler: PluginCreator}} PluginWithConfig
- * @type {{(options: {sourceColor: string} | {'source-color': string} | {source: string}) : PluginWithConfig}}x
+ * @import {PluginCreator, PluginsConfig} from "tailwindcss/plugin"
  */
-// /** @type {import("tailwindcss/plugin").PluginsConfig} */
+/** @type {PluginsConfig} */
 const materialTailwindPlugin = plugin.withOptions(
   () => {
     return (_api) => {};
