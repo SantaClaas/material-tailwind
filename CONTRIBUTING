@@ -7,6 +7,116 @@ JSDoc to use types. This allows us to write safe code without needing an additio
 Tooling like VS Code picks automatically picks up `jsconfig.json` which is equivalent to `tsconfig.json` and helps you
 write type safe code. Meaning the code would still pass `tsc` if it were run.
 
+## Package manager
+
+This project uses pnpm. The exact version is pinned in the `packageManager` field of `package.json`, and CI
+reads it from there, so there is one place to bump it. Install dependencies with `pnpm install`.
+
 ## Versioning
 
-Versions are controlled using git tags which get picked up by GitHub actions. No need to manually update `package.json`.
+Versions are controlled using git tags which get picked up by GitHub actions. No need to manually update
+`package.json` — it stays at `0.0.0` and the release workflow sets the real version from the tag before packing.
+
+Tags carry no `v` prefix: `0.6.1`, not `v0.6.1`.
+
+## Releasing
+
+Releasing is a two-part flow: pushing a tag builds and *stages* the release, and a maintainer then approves it
+with their second factor. CI can never publish on its own — see [Why it works this way](#why-it-works-this-way).
+
+### One-time setup
+
+- **A signing key.** The tag ruleset requires signed tags, so an unsigned `git tag` is rejected on push.
+  Either GPG or SSH signing works; for SSH:
+
+  ```sh
+  git config --global gpg.format ssh
+  git config --global user.signingkey ~/.ssh/id_ed25519.pub
+  ```
+
+  Add the same key to <https://github.com/settings/keys> as a **signing key** (a key registered only for
+  authentication will not verify tags).
+
+- **npm 11.15 or newer**, if you want to approve releases from the CLI rather than the website:
+
+  ```sh
+  npm --version
+  ```
+
+  Older versions have no `npm stage` command. The website works regardless of local npm version.
+
+### 1. Tag the release
+
+Tag creation is restricted to repository admins. Update `CHANGELOG`/`README` if the release needs it, then:
+
+```sh
+git tag -s 0.6.1 -m 'Release 0.6.1'
+```
+
+```sh
+git push origin 0.6.1
+```
+
+### 2. Let CI build and stage it
+
+Pushing the tag runs [`.github/workflows/publish.yaml`](.github/workflows/publish.yaml), which
+
+1. runs the tests,
+2. builds the type definitions into `dist/` in a **separate job** and passes them along as an artifact,
+3. in a third job that installs no dependencies at all, sets the version from the tag and runs
+   `npm stage publish`.
+
+Watch it at <https://github.com/SantaClaas/material-tailwind/actions>. Staging is not publishing: nothing is
+installable from the registry yet.
+
+### 3. Approve the staged release
+
+This is the manual step, and it needs your 2FA — it is the reason a compromised CI cannot ship a release.
+
+On the website: npmjs.com → user menu → **Staged Packages** → review → approve.
+
+Or from the CLI:
+
+```sh
+npm stage list
+```
+
+```sh
+npm stage view @claas.dev/material-tailwind@0.6.1
+```
+
+```sh
+npm stage approve @claas.dev/material-tailwind@0.6.1
+```
+
+To inspect the exact tarball before approving, `npm stage download` fetches it. To throw the release away,
+`npm stage reject` — then fix the problem and tag a new patch version. Do not reuse a tag: releases are
+immutable and tag updates are blocked by the ruleset.
+
+### 4. Verify
+
+```sh
+npm view @claas.dev/material-tailwind version
+```
+
+The release should carry a provenance attestation linking it back to the workflow run that built it.
+
+## Why it works this way
+
+There is no npm token anywhere — not in CI, not in repo secrets. Instead:
+
+- The package is set up on npm with **Trusted Publishing**, so only this repository's `publish.yaml` can
+  stage a release, authenticated per-run via OIDC. Publishing access is set to require 2FA and disallow
+  tokens, so there is no token left to steal.
+- Trusted Publishing is restricted to **stage-only**. Even a fully compromised workflow can stage something,
+  but a human with a second factor has to approve it before anyone can install it.
+- The publish job installs **no dependencies** and uses no cache — anything running in a job that holds
+  `id-token: write` could otherwise publish. Building happens in a different job with no such permission.
+- All third-party actions are pinned to a commit SHA, and installs run with `--ignore-scripts`.
+- New dependency versions are held for three days (`minimumReleaseAge` in `pnpm-workspace.yaml`) so that
+  malicious releases have time to be taken down before they reach a build.
+- Tag creation, update and deletion are restricted to repository admins, and releases are immutable.
+
+[`.github/workflows/check-workflows.yaml`](.github/workflows/check-workflows.yaml) runs
+[zizmor](https://docs.zizmor.sh) over the workflows on every push and pull request to keep these properties
+from eroding.
