@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
 @plugin "@claas.dev/material-tailwind" {
+  /* Every color on the page is derived from this one */
   source-color: #0c1445;
+
+  /* The scheme style. Try monochrome, neutral, tonal-spot, vibrant,
+     expressive, fidelity, content or fruit-salad instead.
+     Defaults to tonal-spot when left out. */
+  variant: vibrant;
+
+  /* 2021 is the established spec, 2025 is Material 3 Expressive.
+     Defaults to 2021 when left out. */
+  spec-version: 2025;
 }
