@@ -2,12 +2,15 @@
 
 Notes on the limits hit while making the generated colors overridable at runtime.
 Everything here was verified against **Tailwind CSS 4.2.4** by compiling with the
-`compile()` API and, where the question was about browser behaviour, by measuring in a
-browser. Findings are dated to that version — the plugin API is not versioned separately.
+`compile()` API, against **Tailwind CSS IntelliSense 0.16.0** by reading what the language
+server actually does, and, where the question was about browser behaviour, by measuring in
+a browser. Findings are dated to those versions — the plugin API is not versioned
+separately.
 
 The short version: a JS plugin cannot participate in Tailwind v4's theme system. It can
 only hand Tailwind a v3-shaped config object and write base styles. Everything below
-follows from that.
+follows from that, including the editor tooling breaking, which looks like a separate
+problem and is not.
 
 ## 1. Plugin theme values are inlined, never emitted as variables
 
@@ -132,7 +135,40 @@ assumed.
 The general lesson: **a plugin should read variables, not declare them.** Every value it
 declares is a value the user cannot override from the place Tailwind documents.
 
-## 6. Both plugin callbacks need the same work done
+## 6. Editor tooling stops showing color swatches
+
+Tailwind CSS IntelliSense draws a colored square next to a color utility in the editor.
+For every color this plugin generates, that square is now gone.
+
+It is the same root cause as §1–§3 rather than a separate problem, and the mechanism is
+worth writing down because it is not obvious. Checked against
+`bradlc.vscode-tailwindcss@0.16.0`:
+
+- The extension resolves a utility's value and then asks the **design system** for any
+  theme variable in it — `designSystem.resolveThemeValue(name, true)`. That is why
+  `bg-red-500`, which compiles to `var(--color-red-500)`, still gets a swatch: the design
+  system knows that variable.
+- Our variables are registered with `@property` in base styles. The design system has
+  never heard of them, so `resolveThemeValue` returns nothing and the `var()` survives.
+- Before parsing a color, the extension replaces any `var(…)` with the literal `1`. An
+  unresolved variable therefore becomes an unparseable value, and no swatch is drawn.
+- The regex it uses for that is `/var\([^)]+\)/`, which stops at the first `)`. Our
+  composite fallback nests variables inside a `light-dark()`, so it is not merely
+  unresolved but mangled.
+
+The part that stings is that this is a **regression**, not a pre-existing gap. The
+extension does understand `light-dark()` — it rewrites `light-dark(a, b)` to `a` and
+swatches the light value. So before the colors became variables, every utility here had a
+working swatch: the per-scheme roles were literal hex, and the composites were
+`light-dark(#525a92, #bbc3ff)`. Both resolved. Trading that away was not a considered
+decision at the time.
+
+Nothing in the plugin API can fix it. The extension is asking the design system a
+reasonable question; we simply cannot put anything into the design system (§3). The
+codegen escape hatch in §4 would fix this too, and for the same reason it fixes the
+others — a real `@theme` block is exactly what `resolveThemeValue` reads.
+
+## 7. Both plugin callbacks need the same work done
 
 `plugin.withOptions` takes two functions: one returning the config, one receiving the
 `PluginAPI`. Because the theme values and the variable definitions are two halves of the
@@ -142,7 +178,7 @@ the result is memoised per distinct set of options.
 
 Not a serious limitation, but the API shape does force the caching.
 
-## 7. `theme.colors` replacement is all-or-nothing
+## 8. `theme.colors` replacement is all-or-nothing
 
 Setting `theme.colors` rather than `theme.extend.colors` does work from a plugin and
 cleanly replaces Tailwind's palette, which is how the `colors: replace` option is built.
@@ -178,7 +214,8 @@ place. All measured in a browser.
 ## Open questions
 
 - Is the codegen approach from §4 worth offering alongside the plugin? It removes §1, §2,
-  §4 and §5 at once.
+  §4, §5 and §6 at once, which is most of this document. The cost is a build step and
+  giving up `@plugin` configuration.
 - The palettes are 109 of the remaining 227 registrations and are arguably a lower-level
   tool than the roles. Should they be opt-in the way the contrast levels now are?
 - Could the leaves become fallbacks too, the way the composites did, and drop the fixed
