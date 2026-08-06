@@ -44,6 +44,45 @@ export default {
 };
 ```
 
+### Options
+
+| Option         | Values                                                                                             | Default      |
+| -------------- | -------------------------------------------------------------------------------------------------- | ------------ |
+| `source-color` | Any hex color                                                                                       | _(required)_ |
+| `variant`      | `monochrome`, `neutral`, `tonal-spot`, `vibrant`, `expressive`, `fidelity`, `content`, `rainbow`, `fruit-salad` | `tonal-spot` |
+| `spec-version` | `2021`, `2025`                                                                                      | `2021`       |
+
+Every option also accepts camelCase (`sourceColor`, `specVersion`) so the same names
+work in a `tailwind.config.js`.
+
+```css
+@plugin "@claas.dev/material-tailwind" {
+  source-color: #0c1445;
+  variant: vibrant;
+  spec-version: 2025;
+}
+```
+
+#### `variant`
+
+The scheme style used to derive the palettes from your source color. These are the same
+styles offered by the [Material Theme Builder](https://material-foundation.github.io/material-theme-builder/),
+so you can preview them there before picking one. `tonal-spot` is the default Material You
+style.
+
+#### `spec-version`
+
+Which version of the Material color spec to generate. `2021` is the established spec and
+stays the default. `2025` is the Material 3 Expressive spec, which shifts many tones
+slightly and adds the `-dim` colors:
+
+```html
+<div class="bg-primary-dim text-on-primary">…</div>
+```
+
+The `-dim` utilities are generated under both spec versions, so you can use them without
+opting in to `2025`.
+
 # How it works
 
 The plugin generates colors with [@material/material-color-utilites](https://www.npmjs.com/package/@material/material-color-utilities) and extends the Tailwind CSS theme to make them available for you. Additionally this plugin extends the default theme with various design tokens collected from [material.io](https://material.io) and the [Material 3 Design Kit (Community)](https://www.figma.com/community/file/1035203688168086460).
