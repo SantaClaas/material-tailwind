@@ -47,3 +47,38 @@ export default {
 # How it works
 
 The plugin generates colors with [@material/material-color-utilites](https://www.npmjs.com/package/@material/material-color-utilities) and extends the Tailwind CSS theme to make them available for you. Additionally this plugin extends the default theme with various design tokens collected from [material.io](https://material.io) and the [Material 3 Design Kit (Community)](https://www.figma.com/community/file/1035203688168086460).
+
+# Known issues
+
+### `ERR_MODULE_NOT_FOUND` from `@material/material-color-utilities`
+
+`@material/material-color-utilities@0.4.0` is an ESM-only package, but some of its
+internal imports are missing the required `.js` extension. Node's ESM loader cannot
+resolve those, so importing this plugin can fail with:
+
+```
+Cannot find module '.../@material/material-color-utilities/dynamiccolor/dynamic_scheme'
+imported from .../@material/material-color-utilities/scheme/scheme_content.js
+```
+
+This is an upstream bug, tracked in
+[material-foundation/material-color-utilities#195](https://github.com/material-foundation/material-color-utilities/issues/195).
+The fix is [PR #193](https://github.com/material-foundation/material-color-utilities/pull/193),
+which has not been released yet.
+
+**Most setups are unaffected.** Tailwind CSS loads plugins through
+[jiti](https://github.com/unjs/jiti), which resolves extensionless imports fine, so both
+configuration methods above work as documented. You are only likely to hit this if you
+import the plugin directly under Node's native ESM loader — for example from a test
+runner that does not bundle dependencies.
+
+If you do hit it, patch the dependency in your own project. With pnpm:
+
+```bash
+pnpm patch @material/material-color-utilities@0.4.0
+```
+
+Add the missing `.js` extensions in the printed directory, then run the `pnpm patch-commit`
+command it gives you. npm and yarn users can do the equivalent with
+[patch-package](https://www.npmjs.com/package/patch-package). Remove the patch once a fixed
+release is out.
