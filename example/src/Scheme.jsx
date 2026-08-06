@@ -190,7 +190,7 @@ export default function Scheme() {
           <Swatch
             role="On Primary Fixed Variant"
             token="p-30"
-            class="bg-light-on-primary-fixed-variant dark:bg-dark-primary-fixed-variant
+            class="bg-light-on-primary-fixed-variant dark:bg-dark-on-primary-fixed-variant
             text-light-primary-fixed-dim dark:text-dark-primary-fixed-dim
             col-span-2"
           />
@@ -219,7 +219,7 @@ export default function Scheme() {
           <Swatch
             role="On secondary Fixed Variant"
             token="s-30"
-            class="bg-light-on-secondary-fixed-variant dark:bg-dark-secondary-fixed-variant
+            class="bg-light-on-secondary-fixed-variant dark:bg-dark-on-secondary-fixed-variant
             text-light-secondary-fixed-dim dark:text-dark-secondary-fixed-dim
             col-span-2"
           />
@@ -248,7 +248,7 @@ export default function Scheme() {
           <Swatch
             role="On tertiary Fixed Variant"
             token="t-30"
-            class="bg-light-on-tertiary-fixed-variant dark:bg-dark-tertiary-fixed-variant
+            class="bg-light-on-tertiary-fixed-variant dark:bg-dark-on-tertiary-fixed-variant
             text-light-tertiary-fixed-dim dark:text-dark-tertiary-fixed-dim
             col-span-2"
           />
