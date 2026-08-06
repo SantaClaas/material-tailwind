@@ -303,6 +303,20 @@ The plugin generates colors with [@material/material-color-utilites](https://www
 
 # Known issues
 
+### Tailwind CSS IntelliSense shows no color swatch
+
+The colored square the VS Code extension draws next to a color utility does not appear for
+the colors this plugin generates. `bg-red-500` still gets one, `bg-primary` does not.
+
+The extension resolves a utility's value and then asks Tailwind's design system for any
+theme variable in it. A plugin cannot register a real theme variable, so the design system
+has never heard of `--color-primary`, the `var()` is left unresolved, and the value stops
+being parseable as a color.
+
+There is no way to fix this from inside a plugin. It is the same limitation that makes the
+colors overridable in the first place, seen from the other side — see
+[docs/tailwind-plugin-api.md](docs/tailwind-plugin-api.md).
+
 ### `ERR_MODULE_NOT_FOUND` from `@material/material-color-utilities`
 
 `@material/material-color-utilities@0.4.0` is an ESM-only package, but some of its
