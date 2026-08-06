@@ -70,40 +70,67 @@ CSS `@theme` does. `addBase` is the only place a plugin can put a declaration.
 This is the expensive one.
 
 Variables that enter through `@theme` are tree-shaken — only the ones actually used are
-emitted. Variables written through `addBase` are ordinary base styles, so all of them
-ship, every build, whether or not a single utility references them.
+emitted. Anything written through `addBase` is an ordinary base style, so all of it ships,
+every build, whether or not a utility references it. We cannot know which utilities the
+user's content will produce, and even if we could there is no hook that runs late enough
+to prune.
 
-For this plugin that is 817 tokens. Measured on the example app:
+Only what a plugin *writes* has this problem. Values that live inside the theme, and so
+inside the utilities, are still tree-shaken by usage. That is what pushed the composites
+into fallbacks (§5) and left only the leaf registrations as fixed cost.
+
+Two things were done about the size:
+
+- **Composites moved into the utilities.** 236 tokens that now cost nothing when unused.
+- **Contrast levels became opt-in.** Material defines every role at four contrast levels,
+  and the three non-default ones were 531 of 817 tokens — 68% of the output — which the
+  example app did not use a single one of.
+
+Measured on the example app:
 
 | | raw | gzip |
 | --- | --- | --- |
 | before (inlined literals) | 17.34 kB | 3.90 kB |
-| after (variables) | 131.59 kB | 11.62 kB |
+| variables, all four contrasts, composites declared | 131.59 kB | 11.62 kB |
+| variables, default contrast, composites as fallbacks | 43.38 kB | 6.27 kB |
 
-About 1 kB gzip of the increase is the `@property` registrations. The rest is the lost
-tree shaking. There is no way to recover it from inside a plugin: we cannot know which
-utilities the user's content will produce, and even if we could, we have no hook that runs
-late enough to prune.
+The fixed part is now 227 registrations, about 1.83 kB gzip (581 and 4.20 kB with
+`contrasts: all`).
 
-The escape hatch is not a plugin at all — a codegen step that writes a `.css` file with a
-real `@theme static { … }` block, which the user `@import`s. That gets genuine theme
-registration, tree shaking, and `@theme inline`, at the cost of a build step and giving up
-`@plugin` configuration. Worth revisiting if the size becomes a problem.
+The escape hatch for the rest is not a plugin at all — a codegen step that writes a `.css`
+file with a real `@theme static { … }` block, which the user `@import`s. That gets genuine
+theme registration, tree shaking, and `@theme inline`, at the cost of a build step and
+giving up `@plugin` configuration. Worth revisiting if the size becomes a problem again.
 
-## 5. `addBase` output lands in `@layer base`, which loses to `@theme`
+## 5. `addBase` output lands in `@layer base`, which beats `@theme`
 
-Tailwind's layer order is `theme, base, components, utilities`. Our variables are in
-`base`; a user's `@theme` block lands in `theme`. Later layers win, so **our definitions
-beat a user's `@theme` override** — the opposite of what someone would expect.
+Tailwind's layer order is `theme, base, components, utilities`. Anything a plugin
+*declares* lands in `base`; a user's `@theme` block lands in `theme`. Later layers win, so
+a plugin declaration silently beats the user's own override — the opposite of what anyone
+would expect.
 
-In practice this bites less than it sounds. Runtime overrides via
-`element.style.setProperty()` or an unlayered `<style>` block both beat every layer, and
-those are the actual use case. But a user trying to override a Material color from
-`@theme` at build time will find it silently ignored, and has to use unlayered CSS
-instead. That is a documentation burden created purely by the API limitation.
+This bit us. A first version declared the composites in a `:root` block and made
+`@theme { --color-primary: … }` stop working, which it had done before the change.
 
-`@property` registrations are unaffected — registration is not a cascading declaration, so
-being nested in a layer does not matter. That was verified rather than assumed.
+The fix was to stop declaring anything. Composites are fallbacks inside the theme value
+instead:
+
+```css
+.bg-primary {
+  background-color: var(--color-primary, light-dark(var(--color-light-primary), …));
+}
+```
+
+Nothing defines `--color-primary`, so setting it anywhere wins, `@theme` included. It also
+costs nothing when no utility uses the color, which is as close to tree shaking as a
+plugin gets.
+
+`@property` registrations are unaffected either way — registration is not a cascading
+declaration, so being nested in a layer does not matter. That was verified rather than
+assumed.
+
+The general lesson: **a plugin should read variables, not declare them.** Every value it
+declares is a value the user cannot override from the place Tailwind documents.
 
 ## 6. Both plugin callbacks need the same work done
 
@@ -152,7 +179,11 @@ place. All measured in a browser.
 
 - Is the codegen approach from §4 worth offering alongside the plugin? It removes §1, §2,
   §4 and §5 at once.
-- Should there be an option to emit only a subset of tokens — say, the default contrast
-  schemes and no palettes — to claw back some of §4 for users who never touch the rest?
+- The palettes are 109 of the remaining 227 registrations and are arguably a lower-level
+  tool than the roles. Should they be opt-in the way the contrast levels now are?
+- Could the leaves become fallbacks too, the way the composites did, and drop the fixed
+  cost to nothing? It would mean giving up `@property`, and with it the invalid-override
+  fallback and animatable theme changes. That is the real trade: a few kB against those
+  two properties.
 - Does a later Tailwind version expose anything closer to theme registration for plugins?
   Worth re-checking §3 on upgrade; the whole design would change if it did.
