@@ -12,4 +12,9 @@
   /* 2021 is the established spec, 2025 is Material 3 Expressive.
      Defaults to 2021 when left out. */
   spec-version: 2025;
+
+  /* Fit the colors to a wider gamut than sRGB and emit oklch(), so a P3
+     display shows chroma sRGB has to clip. Try rec2020, or leave it out
+     for the sRGB hex the Material Theme Builder gives you. */
+  gamut: display-p3;
 }

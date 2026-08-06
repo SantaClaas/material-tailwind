@@ -18,8 +18,9 @@ export default function App() {
         </p>
         <p class="text-body-md text-light-on-surface-variant dark:text-dark-on-surface-variant mb-4">
           Every color below is generated at build time from the source color,
-          variant and spec version in <code>src/index.css</code>. Edit them
-          there and the whole page follows.
+          variant, spec version and gamut in <code>src/index.css</code>. Edit
+          them there and the whole page follows. On a P3 display the wider gamut
+          is visible in the most saturated colors.
         </p>
       </hgroup>
       <Scheme />

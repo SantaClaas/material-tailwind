@@ -48,11 +48,12 @@ export default {
 
 ### Options
 
-| Option         | Values                                                                                             | Default      |
-| -------------- | -------------------------------------------------------------------------------------------------- | ------------ |
-| `source-color` | Any hex color                                                                                       | _(required)_ |
+| Option         | Values                                                                                                          | Default      |
+| -------------- | --------------------------------------------------------------------------------------------------------------- | ------------ |
+| `source-color` | Any hex color                                                                                                   | _(required)_ |
 | `variant`      | `monochrome`, `neutral`, `tonal-spot`, `vibrant`, `expressive`, `fidelity`, `content`, `rainbow`, `fruit-salad` | `tonal-spot` |
-| `spec-version` | `2021`, `2025`                                                                                      | `2021`       |
+| `spec-version` | `2021`, `2025`                                                                                                  | `2021`       |
+| `gamut`        | `srgb`, `display-p3` (or `p3`), `rec2020`                                                                       | `srgb`       |
 
 Every option also accepts camelCase (`sourceColor`, `specVersion`) so the same names
 work in a `tailwind.config.js`.
@@ -62,6 +63,7 @@ work in a `tailwind.config.js`.
   source-color: #0c1445;
   variant: vibrant;
   spec-version: 2025;
+  gamut: display-p3;
 }
 ```
 
@@ -84,6 +86,47 @@ slightly and adds the `-dim` colors:
 
 The `-dim` utilities are generated under both spec versions, so you can use them without
 opting in to `2025`.
+
+#### `gamut`
+
+Which gamut colors are fitted into. `srgb` is the default and emits hex, exactly matching
+the [Material Theme Builder](https://material-foundation.github.io/material-theme-builder/).
+
+`display-p3` and `rec2020` fit the same colors into a wider gamut instead and emit
+`oklch()`, so saturated colors keep chroma that sRGB cannot hold:
+
+```css
+@plugin "@claas.dev/material-tailwind" {
+  source-color: #0c1445;
+  variant: vibrant;
+  gamut: display-p3;
+}
+```
+
+```
+srgb        --color-primary: light-dark(#1c41ff, #bbc3ff);
+display-p3  --color-primary: light-dark(oklch(0.50916 0.29357 264.68), …);
+```
+
+How much this gains depends on how much chroma your scheme asks for. `tonal-spot` and
+`neutral` stay close to sRGB and change little. `vibrant`, `expressive`, `content` and
+`fidelity` with a saturated source color are where sRGB was clipping most, and where a P3
+display has the most to show.
+
+Some things worth knowing before turning it on:
+
+- **Tone is preserved exactly.** Material expresses its contrast guarantees in tone, and
+  fitting to a wider gamut only ever spends chroma, never tone. Contrast between a color
+  and its `on-` pair is unchanged.
+- **sRGB displays are unaffected in principle.** Browsers gamut-map `oklch()` to the
+  display, so these colors still render — but on an sRGB screen the browser does the
+  fitting rather than Material, so the result is very close to, but not byte-identical
+  to, the `srgb` output.
+- **Out-of-sRGB colors are not hex.** If anything downstream parses your theme expecting
+  `#rrggbb`, keep the default.
+
+Browser support is not a concern: `oklch()` has been Baseline since 2023, which is older
+than the `light-dark()` these colors are already emitted with.
 
 # How it works
 
@@ -131,10 +174,10 @@ Under the 2021 spec the fixed roles are fixed tones: `primary-fixed` is tone 90 
 8:1 instead, and its `primary-fixed` is a good deal darker. With a high chroma variant
 there is then no room left below, so the color bottoms out at tone 0:
 
-| spec | `primary-fixed` | `on-primary-fixed` | contrast |
-| ---- | --------------- | ------------------ | -------- |
-| 2021 | `#dfe0ff` (tone 90) | `#000e5f` (tone 10) | 13.2 |
-| 2025 | `#8a99ff` (tone 66) | `#000000` (tone 0) | 8.1 |
+| spec | `primary-fixed`     | `on-primary-fixed`  | contrast |
+| ---- | ------------------- | ------------------- | -------- |
+| 2021 | `#dfe0ff` (tone 90) | `#000e5f` (tone 10) | 13.2     |
+| 2025 | `#8a99ff` (tone 66) | `#000000` (tone 0)  | 8.1      |
 
 The contrast target is still met, so this is what the spec produces rather than a bug in
 this plugin, which passes the values through unchanged. It is not specific to one source
