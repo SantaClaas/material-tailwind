@@ -133,6 +133,37 @@ export default function Scheme() {
           />
         </div>
       </div>
+      {/*
+        The dim colors, which the 2025 color spec adds. Material defines no
+        "on" color for them on the phone platform, so the extreme tone of the
+        matching palette is used for the label instead.
+      */}
+      <div class="col-span-3 grid grid-cols-subgrid gap-1">
+        <Swatch
+          role="Primary Dim"
+          token="p-dim"
+          class="bg-light-primary-dim dark:bg-dark-primary-dim
+                  text-primary-100 dark:text-primary-10"
+        />
+        <Swatch
+          role="Secondary Dim"
+          token="s-dim"
+          class="bg-light-secondary-dim dark:bg-dark-secondary-dim
+                  text-secondary-100 dark:text-secondary-10"
+        />
+        <Swatch
+          role="Tertiary Dim"
+          token="t-dim"
+          class="bg-light-tertiary-dim dark:bg-dark-tertiary-dim
+                  text-tertiary-100 dark:text-tertiary-10"
+        />
+      </div>
+      <Swatch
+        role="Error Dim"
+        token="e-dim"
+        class="bg-light-error-dim dark:bg-dark-error-dim
+                text-error-100 dark:text-error-10"
+      />
       <div class="col-span-3 grid grid-cols-subgrid gap-1">
         {/* Fixed colors */}
         <div class="grid grid-cols-2 ">
