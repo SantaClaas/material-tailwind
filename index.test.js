@@ -3,45 +3,53 @@ import materialTailwind from ".";
 
 /**
  * The theme values are `var()` references now, so the literal a color resolves
- * to lives in the variable the plugin defines through `addBase` rather than in
- * the theme. This collects both, and flattens the nested per-scheme colors the
- * way Tailwind does, so a test can ask for either side.
+ * to lives in the variable the plugin registers through `addBase` rather than
+ * in the theme. This collects both sides.
  * @param {Record<string, unknown>} options
- * @returns {{references: Record<string, any>, variables: Record<string, string>}}
+ * @returns {{references: Record<string, any>, variables: Record<string, string>, base: Record<string, any>}}
  */
 function createTheme(options) {
   const plugin = materialTailwind({ sourceColor: "#0c1445", ...options });
 
-  /** @type {Record<string, string>} */
-  const variables = {};
+  /** @type {Record<string, any>} */
+  let base = {};
   plugin.handler(
     /** @type {any} */ ({
-      /** @param {Record<string, any>} base */
-      addBase(base) {
-        for (const [selector, declarations] of Object.entries(base)) {
-          // A registered leaf carries its color as the initial value, a
-          // composite is a plain declaration in `:root`
-          if (selector.startsWith("@property ")) {
-            variables[selector.slice("@property ".length)] =
-              declarations["initial-value"];
-            continue;
-          }
-
-          Object.assign(variables, declarations);
-        }
+      addBase(/** @type {Record<string, any>} */ rules) {
+        base = rules;
       },
     }),
   );
 
-  const theme = plugin.config.theme;
-  const colors = theme.colors ?? theme.extend.colors;
+  /** @type {Record<string, string>} */
+  const variables = {};
+  for (const [selector, declarations] of Object.entries(base))
+    if (selector.startsWith("@property "))
+      variables[selector.slice("@property ".length)] =
+        declarations["initial-value"];
 
-  return { references: colors, variables };
+  const theme = plugin.config.theme;
+
+  return { references: theme.colors ?? theme.extend.colors, variables, base };
 }
 
 /**
- * The color a theme key ends up showing, following the `var()` reference and
- * any `light-dark()` composed out of further references.
+ * A theme value is one of two shapes: a bare reference to a registered leaf, or
+ * a reference to a composite that is never defined, so what it actually shows is
+ * the fallback.
+ * @param {string} value
+ * @returns {{name: string, fallback: string | undefined}}
+ */
+function parseReference(value) {
+  const match = /^var\((--color-[a-z0-9-]+)(?:, (.+))?\)$/.exec(value);
+  if (match === null) throw new Error(`Not a variable reference: ${value}`);
+
+  return { name: match[1], fallback: match[2] };
+}
+
+/**
+ * The color a theme key ends up showing, following the reference and anything
+ * its fallback is composed out of.
  * @param {Record<string, unknown>} options
  * @returns {Record<string, any>}
  */
@@ -52,17 +60,25 @@ function createColors(options) {
    * @param {string} value
    * @returns {string}
    */
-  const resolve = (value) =>
-    value.replace(
+  const resolve = (value) => {
+    // `black` and `white` are literals the replace mode adds back, not tokens
+    if (!value.startsWith("var(")) return value;
+
+    const { name, fallback } = parseReference(value);
+    // Nothing defines a composite, so a fallback is always what applies
+    const resolved = fallback ?? variables[name] ?? `UNDEFINED(${name})`;
+
+    return resolved.replace(
       /var\((--color-[a-z0-9-]+)\)/g,
-      (_, name) => variables[name] ?? `UNDEFINED(${name})`,
+      (_, nested) => variables[nested] ?? `UNDEFINED(${nested})`,
     );
+  };
 
   /** @type {Record<string, any>} */
   const colors = {};
   for (const [name, value] of Object.entries(references)) {
     if (typeof value === "string") {
-      colors[name] = resolve(resolve(value));
+      colors[name] = resolve(value);
       continue;
     }
 
@@ -92,7 +108,7 @@ it("Can create a Material design TailwindCSS configuration", async () => {
   await expect(json).toMatchFileSnapshot("./theme test.snapshot.json");
 });
 
-it("Points every theme color at a variable that is defined", () => {
+it("Resolves every theme color to something defined", () => {
   const { references, variables } = createTheme({});
 
   /** @type {string[]} */
@@ -103,50 +119,48 @@ it("Points every theme color at a variable that is defined", () => {
 
   expect(values.length).toBeGreaterThan(0);
   for (const value of values) {
-    expect(value).toMatch(/^var\(--color-[a-z0-9-]+\)$/);
+    const { name, fallback } = parseReference(value);
 
-    // Both the reference itself and anything it composes have to exist, or a
-    // utility silently resolves to nothing
-    for (const [, name] of value.matchAll(/var\((--color-[a-z0-9-]+)\)/g)) {
+    // Either the variable is registered, or it has a fallback whose own
+    // references are. Anything else silently resolves to nothing.
+    if (fallback === undefined) {
       expect(variables).toHaveProperty([name]);
-      for (const [, nested] of String(variables[name]).matchAll(
-        /var\((--color-[a-z0-9-]+)\)/g,
-      ))
-        expect(variables).toHaveProperty([nested]);
+      continue;
     }
+
+    for (const [, nested] of fallback.matchAll(/var\((--color-[a-z0-9-]+)\)/g))
+      expect(variables).toHaveProperty([nested]);
   }
 });
 
 it("Composes the light-dark() colors out of the per-scheme variables", () => {
-  const { variables } = createTheme({});
+  const { references } = createTheme({ contrasts: "high" });
 
   // Restating the literals here would mean an override of the light color did
   // not move the color that uses it
-  expect(variables["--color-primary"]).toBe(
-    "light-dark(var(--color-light-primary), var(--color-dark-primary))",
+  expect(references.primary).toBe(
+    "var(--color-primary, light-dark(var(--color-light-primary), var(--color-dark-primary)))",
   );
-  expect(variables["--color-high-contrast-on-surface"]).toBe(
-    "light-dark(var(--color-light-high-contrast-on-surface), var(--color-dark-high-contrast-on-surface))",
+  expect(references["high-contrast-on-surface"]).toBe(
+    "var(--color-high-contrast-on-surface, light-dark(var(--color-light-high-contrast-on-surface), var(--color-dark-high-contrast-on-surface)))",
   );
 });
 
-it("Registers the literal colors, but never a light-dark() one", () => {
-  const plugin = materialTailwind({ sourceColor: "#0c1445" });
+it("Declares nothing, so a user's @theme override still wins", () => {
+  const { base } = createTheme({});
 
-  /** @type {Record<string, any>} */
-  let base = {};
-  plugin.handler(
-    /** @type {any} */ ({
-      addBase(/** @type {Record<string, any>} */ rules) {
-        base = rules;
-      },
-    }),
-  );
+  // A declaration would land in @layer base, which beats the @layer theme an
+  // `@theme` override lands in, and would silently ignore it. Registering a
+  // property is not a declaration and does not have that problem.
+  for (const selector of Object.keys(base))
+    expect(selector).toMatch(/^@property --color-/);
+});
+
+it("Registers the literal colors, but never a light-dark() one", () => {
+  const { base } = createTheme({ contrasts: "all" });
 
   let registered = 0;
-  for (const [selector, declarations] of Object.entries(base)) {
-    if (!selector.startsWith("@property ")) continue;
-
+  for (const declarations of Object.values(base)) {
     registered++;
     expect(declarations.syntax).toBe('"<color>"');
     // Colors inherit, and an unregistered composite reading a registered leaf
@@ -159,6 +173,51 @@ it("Registers the literal colors, but never a light-dark() one", () => {
   }
 
   expect(registered).toBeGreaterThan(500);
+});
+
+it("Generates only the default contrast unless asked", () => {
+  const colors = createColors({});
+
+  expect(colors.primary).toBeDefined();
+  expect(colors.light.primary).toBeDefined();
+  expect(colors["high-contrast-primary"]).toBeUndefined();
+  expect(colors["light-high-contrast"]).toBeUndefined();
+});
+
+it("Adds the contrast levels it is asked for", () => {
+  const colors = createColors({ contrasts: "high" });
+
+  expect(colors["high-contrast-primary"]).toMatch(
+    /^light-dark\(#[0-9a-f]{6}, #[0-9a-f]{6}\)$/,
+  );
+  expect(colors["light-high-contrast"].primary).toMatch(/^#[0-9a-f]{6}$/);
+  // The unqualified roles come from the default level, so it is always there
+  expect(colors.primary).toBeDefined();
+  expect(colors["medium-contrast-primary"]).toBeUndefined();
+});
+
+it.each(["high medium", "high,medium", "high, medium"])(
+  "Takes a list of contrast levels as %o",
+  (contrasts) => {
+    const colors = createColors({ contrasts });
+
+    expect(colors["high-contrast-primary"]).toBeDefined();
+    expect(colors["medium-contrast-primary"]).toBeDefined();
+    expect(colors["reduced-contrast-primary"]).toBeUndefined();
+  },
+);
+
+it("Generates every contrast level for all", () => {
+  const colors = createColors({ contrasts: "all" });
+
+  for (const prefix of ["", "reduced-contrast-", "medium-contrast-", "high-contrast-"])
+    expect(colors[`${prefix}primary`]).toBeDefined();
+});
+
+it("Rejects an unknown contrast level", () => {
+  expect(() => createColors({ contrasts: "extreme" })).toThrowError(
+    /not a Material contrast level/,
+  );
 });
 
 const variants = [

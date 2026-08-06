@@ -273,22 +273,20 @@ function requestedHct(scheme, color) {
  * @property {Record<string, string | Record<string, string>>} colors
  *   The Tailwind theme, every value a `var()` reference
  * @property {Record<string, string>} leaves
- *   Tokens whose value is a literal color. These are the ones worth overriding
- *   and the only ones that can be registered with `@property`.
- * @property {Record<string, string>} composites
- *   Tokens built out of other tokens with `light-dark()`
- *
- * Both are keyed by the bare token name, without the `--color-` the variable
- * gets when it is written out.
+ *   Tokens whose value is a literal color, keyed by the bare token name without
+ *   the `--color-` the variable gets when it is registered. These are the ones
+ *   worth overriding and the only ones that can be registered with `@property`.
+ *   The colors composed out of them live in the theme values instead.
  */
 
 /**
  * Creates colors
  * @param {Schemes} schemes
  * @param {Gamut} gamut
+ * @param {ContrastName[]} contrasts
  * @returns {Tokens}
  */
-function createColors(schemes, gamut) {
+function createColors(schemes, gamut, contrasts) {
   /** @type {Record<string, string | Record<string, string> >} */
   const colors = {};
   /** @type {Record<string, string>} */
@@ -312,25 +310,15 @@ function createColors(schemes, gamut) {
     colors[camelToKebabCase(schemeName)] = schemeColors;
   }
 
-  /**
-   * The contrast levels, as the prefix they get in the color name and the pair
-   * of schemes the `light-dark()` value is built from
-   * @type {[prefix: string, light: SchemeName, dark: SchemeName][]}
-   */
-  const contrasts = [
-    ["", "light", "dark"],
-    ["reduced-contrast-", "light-reduced-contrast", "dark-reduced-contrast"],
-    ["medium-contrast-", "light-medium-contrast", "dark-medium-contrast"],
-    ["high-contrast-", "light-high-contrast", "dark-high-contrast"],
-  ];
-
-  /** @type {Record<string, string>} */
-  const composites = {};
-
   for (const name of colorNames) {
-    for (const [prefix, light, dark] of contrasts) {
-      const lightColor = resolveColor(schemes[light], name, gamut);
-      const darkColor = resolveColor(schemes[dark], name, gamut);
+    for (const contrast of contrasts) {
+      const { prefix, light, dark } = contrastLevels[contrast];
+      const lightScheme = schemes[light];
+      const darkScheme = schemes[dark];
+      if (lightScheme === undefined || darkScheme === undefined) continue;
+
+      const lightColor = resolveColor(lightScheme, name, gamut);
+      const darkColor = resolveColor(darkScheme, name, gamut);
       if (lightColor === undefined || darkColor === undefined) continue;
 
       const role = camelToKebabCase(name);
@@ -338,45 +326,88 @@ function createColors(schemes, gamut) {
 
       // Composed out of the per-scheme tokens rather than restating their
       // literals, so overriding `--color-light-primary` moves `--color-primary`
-      // and every utility built on it too
-      composites[token] =
-        `light-dark(${reference(`${light}-${role}`)}, ${reference(`${dark}-${role}`)})`;
-      colors[token] = reference(token);
+      // and every utility built on it too.
+      //
+      // It goes in the theme as a fallback rather than being declared anywhere.
+      // A declaration would land in `@layer base`, which beats the
+      // `@layer theme` a user's `@theme` override lands in, and would silently
+      // ignore it. Only reading the variable means setting it anywhere wins,
+      // and nothing ships for a color no utility uses.
+      const composite = `light-dark(${reference(`${light}-${role}`)}, ${reference(`${dark}-${role}`)})`;
+      colors[token] = `var(${namespace}${token}, ${composite})`;
     }
   }
 
-  return { colors, leaves, composites };
+  return { colors, leaves };
 }
 
 /**
  * @typedef {"light" | "dark"} Scheme
  * @typedef {"reduced" | "medium" | "high"} Contrast
  * @typedef {Scheme | `${Scheme}-${Contrast}-contrast`} SchemeName
- * @typedef {Record<SchemeName, DynamicScheme>} Schemes
+ * @typedef {Partial<Record<SchemeName, DynamicScheme>>} Schemes
  */
 
 /**
- * Using contrast values as recommended by https://github.com/material-foundation/material-color-utilities/blob/9889de141b3b5194b8574f9e378e55f4428bdb5e/dev_guide/creating_color_scheme.md
+ * Every color role exists at four contrast levels. Only the default one is
+ * generated unless asked for, because the other three are two thirds of
+ * everything this plugin emits and most themes never use them.
  *
+ * Contrast values are the ones recommended by
+ * https://github.com/material-foundation/material-color-utilities/blob/9889de141b3b5194b8574f9e378e55f4428bdb5e/dev_guide/creating_color_scheme.md
+ * @satisfies {Record<string, {contrast: number, prefix: string, light: SchemeName, dark: SchemeName}>}
+ */
+const contrastLevels = {
+  default: { contrast: 0, prefix: "", light: "light", dark: "dark" },
+  reduced: {
+    contrast: -1,
+    prefix: "reduced-contrast-",
+    light: "light-reduced-contrast",
+    dark: "dark-reduced-contrast",
+  },
+  medium: {
+    contrast: 0.5,
+    prefix: "medium-contrast-",
+    light: "light-medium-contrast",
+    dark: "dark-medium-contrast",
+  },
+  high: {
+    contrast: 1,
+    prefix: "high-contrast-",
+    light: "light-high-contrast",
+    dark: "dark-high-contrast",
+  },
+};
+
+/** @typedef {keyof typeof contrastLevels} ContrastName */
+
+/**
+ * The unqualified color roles come from the default level, so it is always
+ * generated whether or not it was asked for.
+ * @type {ContrastName}
+ */
+const requiredContrast = "default";
+
+/**
  * @param {string} sourceColor
  * @param {VariantName} variant
  * @param {SpecVersion} specVersion
+ * @param {ContrastName[]} contrasts
  * @returns {Schemes}
  */
-function createSchemes(sourceColor, variant, specVersion) {
+function createSchemes(sourceColor, variant, specVersion, contrasts) {
   const color = Hct.fromInt(argbFromHex(sourceColor));
   const Scheme = variants[variant];
 
-  return {
-    "light-reduced-contrast": new Scheme(color, false, -1, specVersion),
-    light: new Scheme(color, false, 0, specVersion),
-    "light-medium-contrast": new Scheme(color, false, 0.5, specVersion),
-    "light-high-contrast": new Scheme(color, false, 1, specVersion),
-    "dark-reduced-contrast": new Scheme(color, true, -1, specVersion),
-    dark: new Scheme(color, true, 0, specVersion),
-    "dark-medium-contrast": new Scheme(color, true, 0.5, specVersion),
-    "dark-high-contrast": new Scheme(color, true, 1, specVersion),
-  };
+  /** @type {Schemes} */
+  const schemes = {};
+  for (const name of contrasts) {
+    const { contrast, light, dark } = contrastLevels[name];
+    schemes[light] = new Scheme(color, false, contrast, specVersion);
+    schemes[dark] = new Scheme(color, true, contrast, specVersion);
+  }
+
+  return schemes;
 }
 
 /**
@@ -416,15 +447,23 @@ function registerProperties(leaves) {
  * @param {SpecVersion} specVersion
  * @param {Gamut} gamut
  * @param {ColorsMode} colorsMode
+ * @param {ContrastName[]} contrasts
  * @returns {{theme: ThemeConfig, base: Record<string, Record<string, string>>}}
  */
-function createTheme(sourceColor, variant, specVersion, gamut, colorsMode) {
-  const schemes = createSchemes(sourceColor, variant, specVersion);
-  const { colors, leaves, composites } = createColors(schemes, gamut);
+function createTheme(
+  sourceColor,
+  variant,
+  specVersion,
+  gamut,
+  colorsMode,
+  contrasts,
+) {
+  const schemes = createSchemes(sourceColor, variant, specVersion, contrasts);
+  const { colors, leaves } = createColors(schemes, gamut, contrasts);
 
   // The palettes are the same for light and dark
   /** @type {PaletteArray} */
-  const sourcePalettes = Object.entries(schemes.light)
+  const sourcePalettes = Object.entries(schemes.light ?? {})
     .filter(([, value]) => value instanceof TonalPalette)
     // Remove "palette" postfix
     .map(([key, value]) => [key.replace("Palette", ""), value]);
@@ -457,20 +496,10 @@ function createTheme(sourceColor, variant, specVersion, gamut, colorsMode) {
     theme.extend = { ...theme.extend, colors: themeColors };
   }
 
-  /** @type {Record<string, string>} */
-  const declarations = {};
-  for (const [token, value] of Object.entries(composites))
-    declarations[`${namespace}${token}`] = value;
-
-  return {
-    theme,
-    base: {
-      ...registerProperties(leaves),
-      // The registered leaves already carry their value as `initial-value`, so
-      // only the composites need a declaration
-      ":root": declarations,
-    },
-  };
+  // Only the leaves are written out. They carry their color as `initial-value`,
+  // and the composites are fallbacks inside the theme values, so there is
+  // nothing left to declare.
+  return { theme, base: registerProperties(leaves) };
 }
 
 class PluginOptionsUndefinedError extends Error {
@@ -525,6 +554,15 @@ class UnknownColorsModeError extends Error {
   }
 }
 
+class UnknownContrastError extends Error {
+  /** @param {string} contrast */
+  constructor(contrast) {
+    super(
+      `"${contrast}" is not a Material contrast level. Pick any of: ${Object.keys(contrastLevels).join(", ")}, or "all".`,
+    );
+  }
+}
+
 /**
  * Aliases accepted for a gamut, so the CSS can say what reads naturally. A Map
  * rather than an object so a name like "constructor" misses instead of
@@ -563,9 +601,40 @@ function readOption(options, names) {
 }
 
 /**
+ * Reads the contrast levels to generate. Takes a list, because they are not
+ * exclusive, in whatever separator reads naturally: `high`, `high medium`,
+ * `high, medium` and `all` all work.
+ * @param {Record<string, unknown>} options
+ * @returns {ContrastName[]}
+ */
+function readContrasts(options) {
+  const requested = readOption(options, ["contrasts", "contrast"]);
+  if (requested === undefined) return [requiredContrast];
+
+  const names = requested
+    .split(/[\s,]+/)
+    .filter(Boolean)
+    .map((name) => name.toLowerCase());
+
+  if (names.includes("all"))
+    return /** @type {ContrastName[]} */ (Object.keys(contrastLevels));
+
+  for (const name of names)
+    if (!(name in contrastLevels)) throw new UnknownContrastError(name);
+
+  // The default level is what the unqualified roles come from, so it is always
+  // generated. A Set keeps the rest from being generated twice if listed twice.
+  return [
+    ...new Set(
+      /** @type {ContrastName[]} */ ([requiredContrast, ...names]),
+    ),
+  ];
+}
+
+/**
  * Reads the plugin options, in either their CSS or their camelCase spelling
  * @param {Record<string, unknown> | undefined} options
- * @returns {{sourceColor: string, variant: VariantName, specVersion: SpecVersion, gamut: Gamut, colorsMode: ColorsMode}}
+ * @returns {{sourceColor: string, variant: VariantName, specVersion: SpecVersion, gamut: Gamut, colorsMode: ColorsMode, contrasts: ContrastName[]}}
  */
 function resolveOptions(options) {
   if (options === undefined) throw new PluginOptionsUndefinedError();
@@ -625,6 +694,7 @@ function resolveOptions(options) {
     specVersion: /** @type {SpecVersion} */ (specVersion),
     gamut,
     colorsMode,
+    contrasts: readContrasts(options),
   };
 }
 
@@ -652,6 +722,7 @@ function build(options) {
       resolved.specVersion,
       resolved.gamut,
       resolved.colorsMode,
+      resolved.contrasts,
     );
     themes.set(key, theme);
   }

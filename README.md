@@ -55,6 +55,7 @@ export default {
 | `spec-version` | `2021`, `2025`                                                                                                  | `2021`       |
 | `gamut`        | `srgb`, `display-p3` (or `p3`), `rec2020`                                                                       | `srgb`       |
 | `colors`       | `extend`, `replace`                                                                                             | `extend`     |
+| `contrasts`    | any of `default`, `reduced`, `medium`, `high`, or `all`                                                         | `default`    |
 
 Every option also accepts camelCase (`sourceColor`, `specVersion`) so the same names
 work in a `tailwind.config.js`.
@@ -160,6 +161,26 @@ are kept explicitly because they do come from the palette and are too widely use
 
 `extend` stays the default so upgrading does not move anyone's colors.
 
+#### `contrasts`
+
+Material defines every color role at four contrast levels. Only the default one is
+generated unless you ask for more, because the other three are two thirds of everything
+this plugin emits and most themes never use them:
+
+```css
+@plugin "@claas.dev/material-tailwind" {
+  source-color: #0c1445;
+  contrasts: high;
+}
+```
+
+That adds `bg-high-contrast-primary`, `bg-light-high-contrast-primary` and the rest of the
+high contrast roles. The list is not exclusive, and any separator that reads naturally
+works — `high medium`, `high, medium`, or `all` for every level.
+
+The `default` level is always generated whether or not you list it, because the
+unqualified roles (`bg-primary`, `text-on-surface`) come from it.
+
 # Overriding colors at runtime
 
 Every color is emitted as a CSS variable in Tailwind's own `--color-*` namespace, so you
@@ -185,34 +206,31 @@ every palette step:
 utilities use:
 
 ```css
---color-primary: light-dark(var(--color-light-primary), var(--color-dark-primary));
+.bg-primary {
+  background-color: var(
+    --color-primary,
+    light-dark(var(--color-light-primary), var(--color-dark-primary))
+  );
+}
 ```
 
 Composites reference the leaves rather than restating their literals, so overriding
-`--color-light-primary` moves `--color-primary` and every utility built on it. Override
-leaves, not composites.
+`--color-light-primary` moves `--color-primary` and every utility built on it.
 
-### Override in unlayered CSS, not in `@theme`
-
-A plugin can only write base styles, so these variables land in `@layer base`. A `@theme`
-block lands in `@layer theme`, which comes first and therefore loses — an override written
-there is silently ignored:
+Composites are never declared anywhere — they exist only as the fallback above. That means
+you can override either level, and from anywhere:
 
 ```css
-/* Does nothing. */
-@theme {
-  --color-light-primary: #ff0000;
-}
-
-/* Works: unlayered CSS beats every layer. */
+/* Retint every default-contrast color that builds on it. */
 :root {
   --color-light-primary: #ff0000;
 }
-```
 
-Setting the property from JavaScript works for the same reason. This is a limitation of
-the plugin API rather than a choice — see
-[docs/tailwind-plugin-api.md](docs/tailwind-plugin-api.md).
+/* Or replace one composite outright, light and dark together. */
+@theme {
+  --color-primary: #ff0000;
+}
+```
 
 ### The leaves are registered with `@property`
 
@@ -269,11 +287,15 @@ override individual roles and swap between schemes you generated ahead of time.
 
 ### The cost
 
-Because a Tailwind plugin cannot register real theme variables, all 817 tokens ship
-whether or not a utility uses them — Tailwind's tree shaking does not apply. In the
-[example app](example) this took the stylesheet from 3.90 kB to 11.62 kB gzipped. About
-1 kB of that is the `@property` registrations; the rest is the lost tree shaking. See
-[docs/tailwind-plugin-api.md](docs/tailwind-plugin-api.md) for why.
+Because a Tailwind plugin cannot register real theme variables, every leaf ships whether
+or not a utility uses it — Tailwind's tree shaking does not apply to what a plugin writes.
+That is 227 registrations, about 1.83 kB gzipped, at the default contrast. Adding all four
+contrast levels raises it to 581 registrations and about 4.20 kB.
+
+Composites cost nothing when unused, since they live in the utilities rather than in a
+block of their own. In the [example app](example) the stylesheet went from 3.90 kB to
+6.27 kB gzipped. See [docs/tailwind-plugin-api.md](docs/tailwind-plugin-api.md) for why
+the fixed part cannot be tree-shaken away.
 
 # How it works
 
