@@ -123,3 +123,22 @@ Add the missing `.js` extensions in the printed directory, then run the `pnpm pa
 command it gives you. npm and yarn users can do the equivalent with
 [patch-package](https://www.npmjs.com/package/patch-package). Remove the patch once a fixed
 release is out.
+
+### `on-*-fixed` can come out pure black under `spec-version: 2025`
+
+Under the 2021 spec the fixed roles are fixed tones: `primary-fixed` is tone 90 and
+`on-primary-fixed` is tone 10. The 2025 spec derives them from a contrast target of about
+8:1 instead, and its `primary-fixed` is a good deal darker. With a high chroma variant
+there is then no room left below, so the color bottoms out at tone 0:
+
+| spec | `primary-fixed` | `on-primary-fixed` | contrast |
+| ---- | --------------- | ------------------ | -------- |
+| 2021 | `#dfe0ff` (tone 90) | `#000e5f` (tone 10) | 13.2 |
+| 2025 | `#8a99ff` (tone 66) | `#000000` (tone 0) | 8.1 |
+
+The contrast target is still met, so this is what the spec produces rather than a bug in
+this plugin, which passes the values through unchanged. It is not specific to one source
+color either: with `variant: vibrant` most source colors land on `#000000`, including
+Material's own `#6750a4`. The sibling roles usually keep a tint because their palettes have
+less chroma and their `-fixed` colors land lighter. Use `spec-version: 2021` if you want the
+tinted pairing back.
