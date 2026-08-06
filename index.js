@@ -18,9 +18,11 @@ import {
 import plugin from "tailwindcss/plugin.js";
 
 import defaultConfiguration from "./default.config.js";
+import { defaultGamut, gamuts, oklchFromArgb, oklchFromHct } from "./color.js";
 
 /**
  * @import {DynamicScheme} from "@material/material-color-utilities"
+ * @import {Gamut} from "./color.js"
  */
 
 /**
@@ -80,9 +82,10 @@ function camelToKebabCase(value) {
 /**
  *
  * @param {TonalPalette} palette
+ * @param {Gamut} gamut
  * @returns {Generator<[number, string]>}
  */
-function* generatePaletteSteps(palette) {
+function* generatePaletteSteps(palette, gamut) {
   // Supported color steps
   // Material Design goes from 0 to 100 for lightness (like percent)
   // whereas Tailwind goes from 50 to 950
@@ -97,22 +100,49 @@ function* generatePaletteSteps(palette) {
   ];
 
   for (const step of materialPalletteSteps) {
-    yield [step, hexFromArgb(palette.tone(step))];
+    yield [step, resolvePaletteStep(palette, step, gamut)];
   }
+}
+
+/**
+ * TonalPalette averages tones 98 and 100 for tone 99 of a yellow palette,
+ * which is an sRGB operation and not an HCT triple we could re-solve in a
+ * wider gamut. It lands next to white with almost no chroma, so nothing is
+ * lost by taking the sRGB answer for it.
+ * @param {TonalPalette} palette
+ * @param {number} tone
+ * @returns {boolean}
+ */
+function isAveragedTone(palette, tone) {
+  return tone === 99 && Hct.isYellow(palette.hue);
+}
+
+/**
+ * @param {TonalPalette} palette
+ * @param {number} tone
+ * @param {Gamut} gamut
+ * @returns {string}
+ */
+function resolvePaletteStep(palette, tone, gamut) {
+  if (gamut === "srgb") return hexFromArgb(palette.tone(tone));
+  if (isAveragedTone(palette, tone)) return oklchFromArgb(palette.tone(tone));
+
+  return oklchFromHct(palette.hue, palette.chroma, tone, gamut);
 }
 
 /** @typedef {[name: string, palette: TonalPalette][]} PaletteArray */
 /**
  *
  * @param {PaletteArray} materialPalettes
+ * @param {Gamut} gamut
  */
-function createPalettes(materialPalettes) {
+function createPalettes(materialPalettes, gamut) {
   /** @type {Record<string, string>} */
   const palettes = {};
   for (let [name, palette] of materialPalettes) {
     name = camelToKebabCase(name);
 
-    for (const [step, color] of generatePaletteSteps(palette)) {
+    for (const [step, color] of generatePaletteSteps(palette, gamut)) {
       palettes[`${name}-${step}`] = color;
     }
   }
@@ -145,21 +175,57 @@ const colorNames = /** @type {ColorName[]} */ (
  * that scheme's spec version (e.g. the "dim" colors before "2025").
  * @param {DynamicScheme} scheme
  * @param {ColorName} name
+ * @param {Gamut} gamut
  * @returns {string | undefined}
  */
-function resolveColor(scheme, name) {
+function resolveColor(scheme, name, gamut) {
   const color = scheme.colors[name]();
   if (!(color instanceof DynamicColor)) return undefined;
 
-  return hexFromArgb(scheme.getArgb(color));
+  if (gamut === "srgb") return hexFromArgb(scheme.getArgb(color));
+
+  // The 2021 spec resolves through TonalPalette, so it inherits the averaged
+  // tone 99 of a yellow palette
+  if (
+    scheme.specVersion !== "2025" &&
+    isAveragedTone(color.palette(scheme), color.getTone(scheme))
+  )
+    return oklchFromArgb(scheme.getArgb(color));
+
+  return oklchFromHct(...requestedHct(scheme, color), gamut);
+}
+
+/**
+ * The hue, chroma and tone a dynamic color asks for, before `Hct.toInt` fits it
+ * into sRGB. Going through the resolved ARGB instead would mean re-reading a
+ * color chroma has already been clipped out of, so the wider gamut would have
+ * nothing left to give back.
+ *
+ * This mirrors what the two spec versions' calculation delegates do: 2021 takes
+ * the palette's own chroma, 2025 scales it by the color's chroma multiplier.
+ * @param {DynamicScheme} scheme
+ * @param {DynamicColor} color
+ * @returns {[hue: number, chroma: number, tone: number]}
+ */
+function requestedHct(scheme, color) {
+  const palette = color.palette(scheme);
+  const tone = color.getTone(scheme);
+
+  if (scheme.specVersion === "2025") {
+    const multiplier = color.chromaMultiplier?.(scheme) ?? 1;
+    return [palette.hue, palette.chroma * multiplier, tone];
+  }
+
+  return [palette.hue, palette.chroma, tone];
 }
 
 /**
  * Creates colors
  * @param {Schemes} schemes
+ * @param {Gamut} gamut
  * @returns {Record<string, string | Record<string, string>>}
  */
-function createColors(schemes) {
+function createColors(schemes, gamut) {
   /** @type {Record<string, string | Record<string, string> >} */
   const colors = {};
 
@@ -168,7 +234,7 @@ function createColors(schemes) {
     const schemeColors = {};
 
     for (const name of colorNames) {
-      const color = resolveColor(scheme, name);
+      const color = resolveColor(scheme, name, gamut);
       if (color === undefined) continue;
 
       schemeColors[camelToKebabCase(name)] = color;
@@ -191,12 +257,12 @@ function createColors(schemes) {
 
   for (const name of colorNames) {
     for (const [prefix, light, dark] of contrasts) {
-      const lightHex = resolveColor(schemes[light], name);
-      const darkHex = resolveColor(schemes[dark], name);
-      if (lightHex === undefined || darkHex === undefined) continue;
+      const lightColor = resolveColor(schemes[light], name, gamut);
+      const darkColor = resolveColor(schemes[dark], name, gamut);
+      if (lightColor === undefined || darkColor === undefined) continue;
 
       colors[`${prefix}${camelToKebabCase(name)}`] =
-        `light-dark(${lightHex}, ${darkHex})`;
+        `light-dark(${lightColor}, ${darkColor})`;
     }
   }
 
@@ -238,10 +304,11 @@ function createSchemes(sourceColor, variant, specVersion) {
  * @param {string} sourceColor
  * @param {VariantName} variant
  * @param {SpecVersion} specVersion
+ * @param {Gamut} gamut
  */
-function createTheme(sourceColor, variant, specVersion) {
+function createTheme(sourceColor, variant, specVersion, gamut) {
   const schemes = createSchemes(sourceColor, variant, specVersion);
-  const colors = createColors(schemes);
+  const colors = createColors(schemes, gamut);
 
   // The palettes are the same for light and dark
   /** @type {PaletteArray} */
@@ -250,15 +317,20 @@ function createTheme(sourceColor, variant, specVersion) {
     // Remove "palette" postfix
     .map(([key, value]) => [key.replace("Palette", ""), value]);
 
-  const palettes = createPalettes(sourcePalettes);
+  const palettes = createPalettes(sourcePalettes, gamut);
 
   const tailwindTheme = defaultConfiguration;
+
+  // The source color is an sRGB hex the user gave us, so there is no wider
+  // gamut version of it to recover. It is only restated in the theme's format.
+  const source =
+    gamut === "srgb" ? sourceColor : oklchFromArgb(argbFromHex(sourceColor));
 
   // Set colors
   tailwindTheme.extend = {
     ...tailwindTheme.extend,
     colors: {
-      source: sourceColor,
+      source,
       ...colors,
       ...palettes,
     },
@@ -300,6 +372,33 @@ class UnknownSpecVersionError extends Error {
     );
   }
 }
+
+class UnknownGamutError extends Error {
+  /** @param {string} gamut */
+  constructor(gamut) {
+    super(
+      `"${gamut}" is not a supported gamut. Pick one of: ${gamuts.join(", ")}.`,
+    );
+  }
+}
+
+/**
+ * Aliases accepted for a gamut, so the CSS can say what reads naturally. A Map
+ * rather than an object so a name like "constructor" misses instead of
+ * resolving to something inherited.
+ * @type {Map<string, Gamut>}
+ */
+const gamutAliases = new Map(
+  /** @type {[string, Gamut][]} */ ([
+    ["srgb", "srgb"],
+    ["s-rgb", "srgb"],
+    ["p3", "display-p3"],
+    ["display-p3", "display-p3"],
+    ["displayp3", "display-p3"],
+    ["rec2020", "rec2020"],
+    ["rec-2020", "rec2020"],
+  ]),
+);
 
 /**
  * Reads the first of `names` that is set in the options
@@ -360,10 +459,25 @@ const materialTailwindPlugin = plugin.withOptions(
     if (!specVersions.includes(specVersion))
       throw new UnknownSpecVersionError(specVersion);
 
+    /** @type {Gamut} */
+    let gamut = defaultGamut;
+    const requestedGamut = readOption(options, [
+      "gamut",
+      "color-gamut",
+      "colorGamut",
+    ]);
+    if (requestedGamut !== undefined) {
+      const alias = gamutAliases.get(requestedGamut.trim().toLowerCase());
+      if (alias === undefined) throw new UnknownGamutError(requestedGamut);
+
+      gamut = alias;
+    }
+
     const tailwindTheme = createTheme(
       sourceColor,
       variantName,
       /** @type {SpecVersion} */ (specVersion),
+      gamut,
     );
     return { theme: tailwindTheme };
   },
