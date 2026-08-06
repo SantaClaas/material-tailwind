@@ -1,1 +1,10 @@
+allowBuilds:
+  esbuild: true
 minimumReleaseAge: 4320
+# @material/material-color-utilities@0.4.0 ships extensionless relative imports
+# in an ESM-only package ("type": "module"), so Node's ESM loader cannot resolve
+# them (ERR_MODULE_NOT_FOUND on dynamiccolor/dynamic_scheme). The patch only adds
+# the missing ".js" extensions, matching upstream PR #193.
+# Drop this once the fix is released: https://github.com/material-foundation/material-color-utilities/issues/195
+patchedDependencies:
+  '@material/material-color-utilities@0.4.0': patches/@material__material-color-utilities@0.4.0.patch
