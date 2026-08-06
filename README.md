@@ -54,6 +54,7 @@ export default {
 | `variant`      | `monochrome`, `neutral`, `tonal-spot`, `vibrant`, `expressive`, `fidelity`, `content`, `rainbow`, `fruit-salad` | `tonal-spot` |
 | `spec-version` | `2021`, `2025`                                                                                                  | `2021`       |
 | `gamut`        | `srgb`, `display-p3` (or `p3`), `rec2020`                                                                       | `srgb`       |
+| `colors`       | `extend`, `replace`                                                                                             | `extend`     |
 
 Every option also accepts camelCase (`sourceColor`, `specVersion`) so the same names
 work in a `tailwind.config.js`.
@@ -64,6 +65,7 @@ work in a `tailwind.config.js`.
   variant: vibrant;
   spec-version: 2025;
   gamut: display-p3;
+  colors: replace;
 }
 ```
 
@@ -127,6 +129,151 @@ Some things worth knowing before turning it on:
 
 Browser support is not a concern: `oklch()` has been Baseline since 2023, which is older
 than the `light-dark()` these colors are already emitted with.
+
+#### `colors`
+
+Whether the generated colors are added to Tailwind's palette or take its place.
+
+Material names its palettes for their role, and two of those names — `neutral` and
+`error` — are also Tailwind color names. Material's steps go `0, 5, 10, … 95, 98, 99, 100`
+and Tailwind's go `50, 100, 200, … 950`, so under the default `extend` the two scales
+interleave. Material wins the steps it defines and Tailwind keeps the rest:
+
+```
+bg-neutral-50    Material tone 50   a mid grey
+bg-neutral-500   Tailwind's neutral-500
+```
+
+`replace` drops Tailwind's palette entirely, so every color name means exactly one thing:
+
+```css
+@plugin "@claas.dev/material-tailwind" {
+  source-color: #0c1445;
+  colors: replace;
+}
+```
+
+This removes `bg-red-500`, `text-sky-300` and every other Tailwind color utility. The
+color keywords are built into the utilities rather than read from the theme, so
+`bg-transparent`, `bg-current` and `bg-inherit` are unaffected, and `black` and `white`
+are kept explicitly because they do come from the palette and are too widely used to drop.
+
+`extend` stays the default so upgrading does not move anyone's colors.
+
+# Overriding colors at runtime
+
+Every color is emitted as a CSS variable in Tailwind's own `--color-*` namespace, so you
+can change one at runtime without rebuilding:
+
+```js
+document.documentElement.style.setProperty("--color-light-primary", "#ff0000");
+```
+
+### How the variables are wired
+
+There are two kinds of token. **Leaves** hold a literal color — every per-scheme role and
+every palette step:
+
+```css
+--color-light-primary            #525a92
+--color-dark-primary             #bbc3ff
+--color-light-high-contrast-primary  #1f275c
+--color-primary-40               #525a92
+```
+
+**Composites** are built out of leaves with `light-dark()`, and are what the unqualified
+utilities use:
+
+```css
+--color-primary: light-dark(var(--color-light-primary), var(--color-dark-primary));
+```
+
+Composites reference the leaves rather than restating their literals, so overriding
+`--color-light-primary` moves `--color-primary` and every utility built on it. Override
+leaves, not composites.
+
+### Override in unlayered CSS, not in `@theme`
+
+A plugin can only write base styles, so these variables land in `@layer base`. A `@theme`
+block lands in `@layer theme`, which comes first and therefore loses — an override written
+there is silently ignored:
+
+```css
+/* Does nothing. */
+@theme {
+  --color-light-primary: #ff0000;
+}
+
+/* Works: unlayered CSS beats every layer. */
+:root {
+  --color-light-primary: #ff0000;
+}
+```
+
+Setting the property from JavaScript works for the same reason. This is a limitation of
+the plugin API rather than a choice — see
+[docs/tailwind-plugin-api.md](docs/tailwind-plugin-api.md).
+
+### The leaves are registered with `@property`
+
+```css
+@property --color-light-primary {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #525a92;
+}
+```
+
+This buys two things. An override that is not a color falls back to the generated default
+instead of poisoning every declaration that reads it — an unregistered custom property
+would take the whole `background-color` down with it. And a registered property is
+animatable, so a theme change can be transitioned:
+
+```css
+:root {
+  transition: --color-light-primary 300ms, --color-dark-primary 300ms;
+}
+```
+
+The transition has to be declared on the element where the value changes — usually
+`:root` — not on the element being painted. Interpolation propagates through the
+`light-dark()` composites to the utilities.
+
+### Why composites are not registered
+
+A registered `<color>` property resolves to a single color at the element it is declared
+on and inherits as that color. A registered `light-dark()` is therefore frozen at the
+root's `color-scheme` and stops following a `color-scheme: dark` subtree. Composites have
+to stay unregistered so `light-dark()` resolves where it is used. This also rules out
+folding them into an `initial-value`, which may not contain `var()` at all.
+
+### Roles are not derived from palette steps
+
+It is tempting to make `--color-light-primary` reference `--color-primary-40`, so that
+overriding five palettes would retint everything. It does not hold up. A role is exactly a
+palette tone often enough to look right and not often enough to be correct:
+
+| | light | dark | light-high-contrast |
+| --- | --- | --- | --- |
+| `spec-version: 2021` | 53/59 | 45/59 | 35/59 |
+| `spec-version: 2025` | 12/59 | 13/59 | 28/59 |
+
+The 2025 chroma multipliers and the contrast levels break the correspondence. Roles and
+palette steps are therefore independent leaves.
+
+### What this does not do
+
+Changing the **source color** at runtime is not possible this way. Deriving a scheme from
+a source color needs Material's HCT solver, which is JavaScript. CSS variables let you
+override individual roles and swap between schemes you generated ahead of time.
+
+### The cost
+
+Because a Tailwind plugin cannot register real theme variables, all 817 tokens ship
+whether or not a utility uses them — Tailwind's tree shaking does not apply. In the
+[example app](example) this took the stylesheet from 3.90 kB to 11.62 kB gzipped. About
+1 kB of that is the `@property` registrations; the rest is the lost tree shaking. See
+[docs/tailwind-plugin-api.md](docs/tailwind-plugin-api.md) for why.
 
 # How it works
 
