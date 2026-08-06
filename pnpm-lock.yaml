@@ -4,13 +4,16 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@material/material-color-utilities@0.4.0': 579e9f0956d2095faaf50863957af118e451940072533d4c577ea0c136d4e7f9
+
 importers:
 
   .:
     dependencies:
       '@material/material-color-utilities':
-        specifier: ^0.3.0
-        version: 0.3.0
+        specifier: ^0.4.0
+        version: 0.4.0(patch_hash=579e9f0956d2095faaf50863957af118e451940072533d4c577ea0c136d4e7f9)
     devDependencies:
       '@types/node':
         specifier: ^22.13.1
@@ -168,8 +171,8 @@ packages:
   '@jridgewell/sourcemap-codec@1.5.0':
     resolution: {integrity: sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ==}
 
-  '@material/material-color-utilities@0.3.0':
-    resolution: {integrity: sha512-ztmtTd6xwnuh2/xu+Vb01btgV8SQWYCaK56CkRK8gEkWe5TuDyBcYJ0wgkMRn+2VcE9KUmhvkz+N9GHrqw/C0g==}
+  '@material/material-color-utilities@0.4.0':
+    resolution: {integrity: sha512-dlq6VExJReb8dhjj3a/yTigr3ncNwoFmL5Iy2ENtbDX03EmNeOEdZ+vsaGrj7RTuO+mB7L58II4LCsl4NpM8uw==}
 
   '@rollup/rollup-android-arm-eabi@4.15.0':
     resolution: {integrity: sha512-O63bJ7p909pRRQfOJ0k/Jp8gNFMud+ZzLLG5EBWquylHxmRT2k18M2ifg8WyjCgFVdpA7+rI0YZ8EkAtg6dSUw==}
@@ -556,7 +559,7 @@ snapshots:
 
   '@jridgewell/sourcemap-codec@1.5.0': {}
 
-  '@material/material-color-utilities@0.3.0': {}
+  '@material/material-color-utilities@0.4.0(patch_hash=579e9f0956d2095faaf50863957af118e451940072533d4c577ea0c136d4e7f9)': {}
 
   '@rollup/rollup-android-arm-eabi@4.15.0':
     optional: true
