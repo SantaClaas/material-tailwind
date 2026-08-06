@@ -24,7 +24,9 @@ npm install --save-dev @claas.dev/material-tailwind
 }
 ```
 
-For reference you can look at an [example](https://github.com/SantaClaas/material-tailwind/tree/main/example) using SolidJS.
+The [live example](https://santaclaas.github.io/material-tailwind/) shows every generated
+color role. Its [source](https://github.com/SantaClaas/material-tailwind/tree/main/example)
+uses SolidJS and is a reference for setting the plugin up.
 
 #### Tailwind CSS v3.0 (or v4.0 with configuration file)
 
